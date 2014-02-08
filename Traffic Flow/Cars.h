@@ -52,6 +52,7 @@ public:
         
         //Move
         //totalSpeed+=speed; //this should not be here
+        /*
         if (pass)
         {
 			road->carMove(lane, place, lane + off, (place + spd) % road->length); //does not modify the info of the car, must be called before modifing
@@ -65,6 +66,9 @@ public:
 			speed = spd;
         	place = (place + speed) % road->length;
 		}
+		*/
+        road->carMoveOff(lane, place, pass ? off : 0, spd); //this modifies the position of the car
+        speed = spd;
     }
 protected:
 	double pslow, ppass;
@@ -105,19 +109,24 @@ public:
         }
         
         //Move
+		/*
         if (pass)
         {
+			
 			road->carMove(lane, place, lane + off, (place + spd) % road->length); //does not modify the info of the car, must be called before modifing
-			speed = spd;
-        	place = (place + speed) % road->length;
+			place = (place + speed) % road->length;
         	lane += off;
-		}
+			speed = spd;
+        }
 		else
 		{
 			road->carMove(lane, place, lane, (place + spd) % road->length); //does not modify the info of the car
 			speed = spd;
         	place = (place + speed) % road->length;
 		}
+		*/
+        road->carMoveOff(lane, place, pass ? off : 0, spd); //this modifies the position of the car
+        speed = spd;
 	}
 protected:
 	double pslow, ppass;
@@ -126,7 +135,7 @@ protected:
 class Block : public Car //a block that does not move
 {
 public:
-	Block(Road *road, int lane, int place, int maxspeed = 0) : Car(road, lane, place, maxspeed, speed)
+	Block(Road *road, int lane, int place, int maxspeed = 0) : Car(road, lane, place, maxspeed, 0)
 	{}
     void Motion()
     {}

@@ -108,6 +108,28 @@ void Road::carMove(int sl, int sk, int tl, int tk) //cars with speed 0 also need
 	tdata[tl][tk] = data[sl][sk];
 	data[sl][sk] = data[sl][sk]->duplicate();
 }
+void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the info of the car
+{
+	Car *c = data[sl][sk];
+	if (!c)
+	{
+		printf("Moving null pointer!\n");
+		return;
+	}
+	if (sl + offl < 0 || sl + offl >= width)
+	{
+		printf("Moving off road!\n");
+		return;
+	}
+	if (offl != 0)
+		passcnt++;
+	int tl = sl + offl;
+	int tk = (sk + offk) % length;
+	tdata[tl][tk] = c;
+	data[sl][sk] = c->duplicate();
+	c->lane += offl;
+	c->place = (c->place + offk) % length;
+}
 void Road::flush() //must flush after all cars have been moved. This updates the cellular automaton
 {
 	Car ***ttdata;

@@ -1,7 +1,8 @@
 #define LENGTH 1000
-#define DENSITY 0.1
 #define SPEEDMAX 5
+#define DENSITY 0.1
 #define ITERATION 10000
+#define OMIT_ITERATION 1000
 
 #include <iostream>
 #include <vector>
@@ -14,9 +15,22 @@
 #include "Road.h"
 #include "Cars.h"
 
+struct Result
+{
+	double avgspeed, density, flux;
+	int passcnt;
+	Result(double as, double d, double f, double pc)
+		: avgspeed(as), density(d), flux(f), passcnt(pc)
+	{}
+	void output(FILE *fp)
+	{
+		fprintf(fp, "%lf\t%lf\t%lf\t%d\n", avgspeed, density, flux, passcnt);
+	}
+};
+
 float avgSpeed[ITERATION]={0};
 Road road(2, LENGTH);
-int main(int argc, const char * argv[])
+Result simulate(double expdensity)
 {
     std::cout << "Hello, World!\n";
     //srand(0);
@@ -24,13 +38,13 @@ int main(int argc, const char * argv[])
 	std::vector<Car *> cars;
     for (int i = 0; i<LENGTH; i++) {
 		
-        if (rand()<RAND_MAX*DENSITY) {
+        if (rand() < RAND_MAX * expdensity) {
 			Car *c = new NS(&road, 0, i, SPEEDMAX);
             road[0][i] = c;
 			cars.push_back(c);
         }
-        if (rand()<RAND_MAX*DENSITY) {
-			Car *c = new NS(&road, 1, i, SPEEDMAX);
+        if (rand() < RAND_MAX * expdensity) {
+			Car *c = new WWH(&road, 1, i, SPEEDMAX);
             road[1][i] = c;
 			cars.push_back(c);
         }
@@ -41,8 +55,9 @@ int main(int argc, const char * argv[])
     int flow=0;
     //int passTime=0;
     long totaltotalspeed = 0;
+    long totaltotalcount = 0;
     Road::passcnt = 0;
-    for (int i = 0; i<ITERATION; i++) {
+    for (int i = 0; i < ITERATION; i++) {
 		road.calOrder();
 		/*
 		for (int j = 0; j < cars.size(); j++)
@@ -72,17 +87,23 @@ int main(int argc, const char * argv[])
 		for (int j = 0; j < cars.size(); j++)
 			totalSpeed += cars[j]->speed;
         avgSpeed[i] = (totalSpeed) / (cars.size() + 0.0);
-        totaltotalspeed += totalSpeed;
+        if (i >= OMIT_ITERATION)
+        {
+			totaltotalspeed += totalSpeed;
+			totaltotalcount += cars.size();
+		}
         /*
         road.print();
         road.print(0, stderr);
         int n = 10000000;
         while (--n);
         */
+        /*
         if (i % (ITERATION / 100) == 0)
         	printf("iteration %d%%\n", i * 100 / ITERATION);
+        */
     }
-    double totavgspeed = (double)totaltotalspeed / (ITERATION * cars.size());
+    double totavgspeed = (double)totaltotalspeed / totaltotalcount;
     double density = (cars.size() / (double)road.length);
     double flux = totavgspeed * density;
     // insert code here...
@@ -90,6 +111,20 @@ int main(int argc, const char * argv[])
     std::cout << "Density   : " << density << "\n";
     std::cout << "Flux      : " << flux << "\n";
     std::cout << "Pass Count: " << Road::passcnt << "\n";
-    system("pause");
-    return 0;
+    return Result(totavgspeed, density, flux, Road::passcnt);
+}
+
+int main(int argc, const char * argv[])
+{
+	int i;
+	FILE *fp;
+	fp = fopen("result.txt", "w");
+	for (i = 0; i < 100; i++)
+	{
+		printf("Simulation #%d\n", i);
+		simulate(rand() / (double)RAND_MAX).output(fp);
+		fflush(fp);
+	}
+	fclose(fp);
+	return 0;
 }
