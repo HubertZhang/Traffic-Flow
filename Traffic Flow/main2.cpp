@@ -12,32 +12,9 @@
 #include <cstring>
 #include <vector>
 
-class Road;
-class Car
-{
-public:
-    //static int totalSpeed;
-    Car(Road *road, int lane, int place, int maxspeed, int speed = 0){
-		this->road = road;
-        this->lane = lane;
-        this->place = place;
-        this->maxspeed = maxspeed;
-        this->speed = speed;
-    }
-    ~Car()
-    {}
-    virtual void Motion() = 0;
-	
-	Road *road;
-    int lane;
-    int place;
-    int speed;
-    int maxspeed;
-};
-
+class Car;
 class Road
 {
-	friend class Car;
 public:
 	Road(int w, int l)
 	{
@@ -168,9 +145,70 @@ public:
 	int **frontpos, **backpos;
 };
 
+
+class Car
+{
+public:
+    //static int totalSpeed;
+    Car(Road *road, int lane, int place, int maxspeed, int speed = 0){
+		this->road = road;
+        this->lane = lane;
+        this->place = place;
+        this->maxspeed = maxspeed;
+        this->speed = speed;
+    }
+    ~Car()
+    {}
+    virtual void Motion() = 0;
+	
+	int distanceThisLane()
+	{
+		Car *frontCar = road->frontCar(lane, (place + 1) % road->length);
+        return frontCar ? (frontCar->place - this->place + road->length) % road->length : road->length;
+	}
+	int distanceOtherLane(int off)
+	{
+		if (off == 0)
+			return distanceThisLane();
+		if (lane + off < 0 || lane + off >= road->width)
+			return -1;
+        Car *frontCarOther = road->frontCar(lane + off, place);
+        return frontCarOther ? (frontCarOther->place - this->place + road->length) % road->length : road->length;
+	}
+	int distanceBack(int off)
+	{
+		if (lane + off < 0 || lane + off >= road->width)
+			return -1;
+		Car *backCarOther = road->backCar(lane + off, place);
+        return backCarOther ? (this->place - backCarOther->place + road->length) % road->length : road->length;
+	}
+   
+	bool switchCondition(int off, int hopeSpeed) //offs = 1 or -1
+	{
+		if (lane + off < 0 || lane + off >= road->width)
+			return false;
+		int dtl = distanceThisLane();
+		return dtl < hopeSpeed && distanceOtherLane(off) > dtl;
+	}
+	bool switchSafeCondition(int off)
+	{
+		if (lane + off < 0 || lane + off >= road->width)
+			return false;
+		Car *backCarOther = road->backCar(lane + off, place);
+		return backCarOther ? distanceBack(off) >= backCarOther->maxspeed : true;
+		//what should the distance be conpared with?
+		//backCarOther->maxspeed is not reasonable
+	}
+	
+	Road *road;
+    int lane;
+    int place;
+    int speed;
+    int maxspeed;
+};
+
 class NS : public Car
 {
-	friend class Car;
 public:
 	NS(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5) : Car(road, lane, place, maxspeed, speed)
 	{
@@ -178,19 +216,27 @@ public:
 	}
     void Motion()
     {
+		//Pass Conditions
+		bool pass = false;
+		int hopeSpeed = std::min(maxspeed , speed + 1);
+		int off = (int)(!lane) - lane;
+		if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+			pass = true;
+		
         //Speed up
         speed = std::min(maxspeed , speed + 1);
-        //Determined speed down
+        //Deterministic speed down
+        /*
         Car *frontCar = road->frontCar(lane, (place + 1) % road->length);
         Car *frontCarOther = road->frontCar(!lane, place);
         Car *backCarOther = road->backCar(!lane, place);
         int distanceThisLane = frontCar ? (frontCar->place - this->place + road->length) % road->length : road->length;
         int distanceOtherLane = frontCarOther ? (frontCarOther->place - this->place + road->length) % road->length : road->length;
         int distanceSafe = backCarOther ? (this->place - backCarOther->place + road->length) % road->length : road->length;
+        */
+        speed = std::max(std::min(distanceThisLane() - 1, speed), 0);
         
-        speed = std::max(std::min(distanceThisLane - 1, speed), 0);
-        //Undetermined speed down
-        
+        //Undeterministic speed down
         if(rand() < RAND_MAX * pslow)
         {
             speed = std::max(speed - 1, 0);
@@ -198,15 +244,68 @@ public:
         
         //Move
         //totalSpeed+=speed; //this should not be here
-		road->carMove(lane, place, lane, (place + speed) % road->length); //does not modify the info of the car
-        place = (place + speed) % road->length;
+        if (pass)
+        {
+			road->carMove(lane, place, lane + off, (place + speed) % road->length); //does not modify the info of the car
+        	place = (place + speed) % road->length;
+        	lane += off;
+		}
+		else
+		{
+			road->carMove(lane, place, lane, (place + speed) % road->length); //does not modify the info of the car
+        	place = (place + speed) % road->length;
+		}
     }
 protected:
 	double pslow;
 };
 
+class WWH : public Car
+{
+public:
+	WWH(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5) : Car(road, lane, place, maxspeed, speed)
+	{
+		this->pslow = pslow;
+	}
+    void Motion()
+    {
+		//Pass Conditions
+		bool pass = false;;
+		int off = (int)(!lane) - lane;
+		if (switchCondition(off, maxspeed) && switchSafeCondition(off))
+			pass = true;
+			
+		//Speed up
+		if (pass)
+			speed = std::min(distanceOtherLane(off), maxspeed);
+		else
+			speed = std::min(distanceThisLane(), maxspeed);
+		
+        //Undetermined speed down
+        if(rand() < RAND_MAX * pslow)
+        {
+            speed = std::max(speed - 1, 0);
+        }
+        
+        //Move
+        if (pass)
+        {
+			road->carMove(lane, place, lane + off, (place + speed) % road->length); //does not modify the info of the car
+        	place = (place + speed) % road->length;
+        	lane += off;
+		}
+		else
+		{
+			road->carMove(lane, place, lane, (place + speed) % road->length); //does not modify the info of the car
+        	place = (place + speed) % road->length;
+		}
+	}
+protected:
+	double pslow;
+};
+
 #define LENGTH 1000
-#define DENSITY 0.01
+#define DENSITY 0.15
 #define SPEEDMAX 5
 #define ITERATION 1000
 
