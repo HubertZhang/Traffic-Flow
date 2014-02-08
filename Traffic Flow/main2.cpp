@@ -12,6 +12,8 @@
 #include <cstring>
 #include <vector>
 
+int passcnt;
+
 class Car;
 class Road
 {
@@ -113,6 +115,8 @@ public:
 	}
 	void carMove(int sl, int sk, int tl, int tk) //cars with speed 0 also need to call this method
 	{
+		if (sl != tl)
+			passcnt++;
 		tdata[tl][tk] = data[sl][sk];
 	}
 	void flush() //must flush after all cars have been moved. This updates the cellular automaton
@@ -121,6 +125,13 @@ public:
 		ttdata = tdata;
 		tdata = data;
 		data = ttdata;
+		if (findRepetition())
+		{
+			print();
+			printf("previous state:\n");
+			print(tdata);
+			while (1);
+		}
 		clearBuffer();
 	}
 	void clearData()
@@ -139,6 +150,31 @@ public:
 	{
 		return data[s];
 	}
+	bool findRepetition()
+	{
+		int l, k, l2, k2;
+		for (l = 0; l < width; l++)
+			for (k = 0; k < length; k++)
+				for (l2 = 0; l2 < width; l2++)
+					for (k2 = 0; k2 < length; k2++)
+						if ((l != l2 || k != k2) && data[l][k] == data[l2][k2] && data[l][k])
+							return true;
+		return false;
+	}
+	void print(Car ***d = 0)
+	{
+		if (d == 0)
+			d = data;
+		int l, k;
+		for (l = 0; l < width; l++)
+		{
+			for (k = 0; k < length; k++)
+				putchar(d[l][k] ? ((long)d[l][k] % 23) + 'A' : '.');
+			printf("\n");
+		}
+		printf("\n");
+	}
+	
 	int width, length;
 	//Car *data[width][length];
 	Car ***data, ***tdata;
@@ -164,7 +200,7 @@ public:
 	int distanceThisLane()
 	{
 		Car *frontCar = road->frontCar(lane, (place + 1) % road->length);
-        return frontCar ? (frontCar->place - this->place + road->length) % road->length : road->length;
+        return frontCar && frontCar != this ? (frontCar->place - this->place + road->length) % road->length : road->length;
 	}
 	int distanceOtherLane(int off)
 	{
@@ -180,7 +216,7 @@ public:
 		if (lane + off < 0 || lane + off >= road->width)
 			return -1;
 		Car *backCarOther = road->backCar(lane + off, place);
-        return backCarOther ? (this->place - backCarOther->place + road->length) % road->length : road->length;
+        return backCarOther && backCarOther != this ? (this->place - backCarOther->place + road->length) % road->length : road->length;
 	}
    
 	bool switchCondition(int off, int hopeSpeed) //offs = 1 or -1
@@ -188,7 +224,7 @@ public:
 		if (lane + off < 0 || lane + off >= road->width)
 			return false;
 		int dtl = distanceThisLane();
-		return dtl < hopeSpeed && distanceOtherLane(off) > dtl;
+		return dtl - 1 < hopeSpeed && distanceOtherLane(off) > dtl;  //dtl-1?
 	}
 	bool switchSafeCondition(int off)
 	{
@@ -210,9 +246,11 @@ public:
 class NS : public Car
 {
 public:
-	NS(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5) : Car(road, lane, place, maxspeed, speed)
+	NS(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5, double ppass = 0.5)
+		: Car(road, lane, place, maxspeed, speed)
 	{
 		this->pslow = pslow;
+		this->ppass = ppass;
 	}
     void Motion()
     {
@@ -220,8 +258,10 @@ public:
 		bool pass = false;
 		int hopeSpeed = std::min(maxspeed , speed + 1);
 		int off = (int)(!lane) - lane;
+		//printf("switch %d, safe %d\n", (int)switchCondition(off, hopeSpeed), (int)switchSafeCondition(off));
+		//printf("dtl = %d, off = %d\n", distanceThisLane(), off);
 		if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
-			pass = true;
+			pass = rand() < (RAND_MAX * ppass);
 		
         //Speed up
         speed = std::min(maxspeed , speed + 1);
@@ -234,7 +274,10 @@ public:
         int distanceOtherLane = frontCarOther ? (frontCarOther->place - this->place + road->length) % road->length : road->length;
         int distanceSafe = backCarOther ? (this->place - backCarOther->place + road->length) % road->length : road->length;
         */
-        speed = std::max(std::min(distanceThisLane() - 1, speed), 0);
+        if (pass)
+        	speed = std::max(std::min(distanceOtherLane(off) - 1, speed), 0); //-1 or not
+		else
+        	speed = std::max(std::min(distanceThisLane() - 1, speed), 0);
         
         //Undeterministic speed down
         if(rand() < RAND_MAX * pslow)
@@ -257,15 +300,17 @@ public:
 		}
     }
 protected:
-	double pslow;
+	double pslow, ppass;
 };
 
 class WWH : public Car
 {
 public:
-	WWH(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5) : Car(road, lane, place, maxspeed, speed)
+	WWH(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5, double ppass = 0.5)
+		: Car(road, lane, place, maxspeed, speed)
 	{
 		this->pslow = pslow;
+		this->ppass = ppass;
 	}
     void Motion()
     {
@@ -273,13 +318,13 @@ public:
 		bool pass = false;;
 		int off = (int)(!lane) - lane;
 		if (switchCondition(off, maxspeed) && switchSafeCondition(off))
-			pass = true;
+			pass = rand() < (RAND_MAX * ppass);
 			
 		//Speed up
 		if (pass)
-			speed = std::min(distanceOtherLane(off), maxspeed);
+			speed = std::min(distanceOtherLane(off) - 1, maxspeed); //-1 or not
 		else
-			speed = std::min(distanceThisLane(), maxspeed);
+			speed = std::min(distanceThisLane() - 1, maxspeed);
 		
         //Undetermined speed down
         if(rand() < RAND_MAX * pslow)
@@ -301,10 +346,19 @@ public:
 		}
 	}
 protected:
-	double pslow;
+	double pslow, ppass;
 };
 
-#define LENGTH 1000
+class Block : public Car //a block that does not move
+{
+public:
+	Block(Road *road, int lane, int place, int maxspeed = 0) : Car(road, lane, place, maxspeed, speed)
+	{}
+    void Motion()
+    {}
+};
+
+#define LENGTH 70
 #define DENSITY 0.15
 #define SPEEDMAX 5
 #define ITERATION 1000
@@ -318,6 +372,7 @@ int main(int argc, const char * argv[])
     srand((unsigned)time(0));
 	std::vector<Car *> cars;
     for (int i = 0; i<LENGTH; i++) {
+		
         if (rand()<RAND_MAX*DENSITY) {
 			Car *c = new NS(&road, 0, i, SPEEDMAX);
             road[0][i] = c;
@@ -328,12 +383,21 @@ int main(int argc, const char * argv[])
             road[1][i] = c;
 			cars.push_back(c);
         }
+        
     }
+    for (int i = 0; i < cars.size(); i++)
+    	for (int j = 0; j < cars.size(); j++)
+    		if (i != j && cars[i] == cars[j])
+    		{
+				printf("repetition!\n");
+				while (1);
+			}
     //int* speedData = new int[amount];
     //int speedData[20];
     int flow=0;
-    int passTime=0;
+    //int passTime=0;
     long totaltotalspeed = 0;
+    passcnt = 0;
     for (int i = 0; i<ITERATION; i++) {
 		road.calOrder();
 		for (int j = 0; j < cars.size(); j++)
@@ -347,14 +411,22 @@ int main(int argc, const char * argv[])
 			totalSpeed += cars[j]->speed;
         avgSpeed[i] = (totalSpeed) / (cars.size() + 0.0);
         totaltotalspeed += totalSpeed;
+        
+        road.print();
+        int n = 10000000;
+        while (--n);
+        
+        if (i % (ITERATION / 100) == 0)
+        	printf("iteration %d%%\n", i * 100 / ITERATION);
     }
     double totavgspeed = (double)totaltotalspeed / (ITERATION * cars.size());
     double density = (cars.size() / (double)road.length);
     double flux = totavgspeed * density;
     // insert code here...
-    std::cout << "Avg Speed: " << totavgspeed << "\n";
-    std::cout << "Density  : " << density << "\n";
-    std::cout << "Flux     : " << flux << "\n";
+    std::cout << "Avg Speed : " << totavgspeed << "\n";
+    std::cout << "Density   : " << density << "\n";
+    std::cout << "Flux      : " << flux << "\n";
+    std::cout << "Pass Count: " << passcnt << "\n";
     return 0;
 }
 
