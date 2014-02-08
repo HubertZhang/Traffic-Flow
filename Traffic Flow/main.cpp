@@ -1,139 +1,95 @@
-//
-//  main.cpp
-//  Traffic Flow
-//
-//  Created by Hubert on 14-2-7.
-//  Copyright (c) 2014年 Geek20. All rights reserved.
-//
-
-#include <iostream>
-#include <ctime>
 #define LENGTH 1000
-#define DENSITY 0.4
+#define DENSITY 0.1
 #define SPEEDMAX 5
-#define max(a, b) (a>b)? a:b
-#define min(a, b) (a<b)? a:b
-class Car
-{
-    int lane;
-    int place;//
-    int speed;
-    //int type;
-    Car* front[2];
-    Car* back[2];
-    friend class car;
-    
-public:
-    static int totalSpeed;
-    Car(int lane,int place){
-        this->lane=lane;
-        this->place=place;
-    }
-    void Motion()
-    {
-        //Speed up
-        speed = max(SPEEDMAX,speed+1);
-        //Determined speed down
-        int distanceThisLane = (front[lane]->place-this->place+LENGTH)%LENGTH;
-        int distanceOtherLane =(front[!lane]->place-this->place+LENGTH)%LENGTH;
-        int distanceSafe=(back[!lane]->place-this->place+LENGTH)%LENGTH;
-        
-        speed = min(distanceThisLane-1,speed);
-        //Undetermined speed down
-        if(rand()%2)
-        {
-            speed = max(speed-1, 0);
-        }
-        //Move
-        totalSpeed+=speed;
-        place+=speed;
-    }
-};
 #define ITERATION 10000
 
+#include <iostream>
+#include <vector>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+
+#include "Car.h"
+#include "Road.h"
+#include "Cars.h"
+
+float avgSpeed[ITERATION]={0};
+Road road(2, LENGTH);
 int main(int argc, const char * argv[])
 {
-    float avgSpeed[ITERATION]={0};
-    int placeData[2][LENGTH]={0};
+    std::cout << "Hello, World!\n";
     //srand(0);
     srand((unsigned)time(0));
-    int amount = 0;
+	std::vector<Car *> cars;
     for (int i = 0; i<LENGTH; i++) {
+		
         if (rand()<RAND_MAX*DENSITY) {
-            amount++;
-            placeData[0][i] =amount;
-            
+			Car *c = new NS(&road, 0, i, SPEEDMAX);
+            road[0][i] = c;
+			cars.push_back(c);
         }
         if (rand()<RAND_MAX*DENSITY) {
-            amount++;
-            placeData[1][i] =amount;
+			Car *c = new NS(&road, 1, i, SPEEDMAX);
+            road[1][i] = c;
+			cars.push_back(c);
         }
+        
     }
-    int* speedData = new int[amount];
+    //int* speedData = new int[amount];
     //int speedData[20];
     int flow=0;
-    int passTime=0;
+    //int passTime=0;
+    long totaltotalspeed = 0;
+    Road::passcnt = 0;
     for (int i = 0; i<ITERATION; i++) {
-        int newPlace[2][LENGTH]={0};
-        int totalSpeed=0;
-        int lastPosition[2];
-        for (int k = 0; k<2; k++) {
-            int temp=LENGTH-1;
-            while (!placeData[k][temp]) {
-                temp--;
-            }
-            lastPosition[k]=temp;
-        }
-        for (int j = 0;j<LENGTH; j++ ) {
-            for (int k = 0; k<2; k++) if (placeData[k][j]) lastPosition[k]=j;
-            for (int k = 0; k<2; k++) {
-                if (placeData[k][j]) {
-                    int index =placeData[k][j];
-                    int speed = speedData[index];
-                    totalSpeed+=speed;
-                    speed = min(speed+1,SPEEDMAX);
-                    int distanceThisLane=SPEEDMAX;
-                    int distanceOtherLane=SPEEDMAX;
-                    int distanceSafe=(j-lastPosition[!k]+LENGTH)%LENGTH;
-                    for(int k1=SPEEDMAX;k1>0;k1--)
-                    {
-                        if (placeData[k][(j+k1)%LENGTH]) {
-                            distanceThisLane = k1-1;
-                        }
-                        if (placeData[!k][(j+k1)%LENGTH]) {
-                            distanceOtherLane = k1-1;
-                        }
-                    }
-                    bool pass = false;
-                    if (distanceThisLane>=speed) {
-                        
-                    }
-                    else if (distanceSafe>=SPEEDMAX&&distanceOtherLane>distanceThisLane) {
-                            speed = min(distanceOtherLane, speed);
-                            pass = true;
-                            passTime++;
-                    }
-                    else
-                    {
-                        speed =distanceThisLane;
-                    }
-                    speedData[index]=speed;
-                    if (j+speed>LENGTH) {
-                        flow++;
-                    }
-                    if(pass)
-                    {
-                        newPlace[!k][(j+speed)%LENGTH]=index;
-                    }
-                    else newPlace[k][(j+speed)%LENGTH]=index;
-                }
-            }
-        }
-        memcpy(placeData, newPlace, LENGTH*2*sizeof(int));
-        avgSpeed[i] = (totalSpeed)/(amount+0.0);
+		road.calOrder();
+		/*
+		for (int j = 0; j < cars.size(); j++)
+		{
+			std::cout << "car " << (char)(((long)cars[j] % 23) + 'A') << " " << (long)cars[j] << ": (" << cars[j]->lane << ", " << cars[j]->place << "), " << cars[j]->speed << "/" << cars[j]->maxspeed << "\t";
+			std::cout << "\t" << cars[j]->distanceThisLane() << "\n";
+		}
+        road.print();
+        */
+		for (int j = 0; j < cars.size(); j++)
+		{
+			cars[j]->Motion();
+		}
+		//road.update();
+		road.flush();
+		/*
+	    for (int a = 0; a < cars.size(); a++)
+	    	for (int b = 0; b < cars.size(); b++)
+	    		if (a != b && cars[a]->lane == cars[b]->lane && cars[a]->place == cars[b]->place)
+	    		{
+					printf("overlap! %c and %c\n", (char)(((long)cars[a] % 23) + 'A'), (char)(((long)cars[b] % 23) + 'A'));
+			        road.print();
+					while (1);
+				}
+		*/
+		int totalSpeed = 0;
+		for (int j = 0; j < cars.size(); j++)
+			totalSpeed += cars[j]->speed;
+        avgSpeed[i] = (totalSpeed) / (cars.size() + 0.0);
+        totaltotalspeed += totalSpeed;
+        /*
+        road.print();
+        road.print(0, stderr);
+        int n = 10000000;
+        while (--n);
+        */
+        if (i % (ITERATION / 100) == 0)
+        	printf("iteration %d%%\n", i * 100 / ITERATION);
     }
+    double totavgspeed = (double)totaltotalspeed / (ITERATION * cars.size());
+    double density = (cars.size() / (double)road.length);
+    double flux = totavgspeed * density;
     // insert code here...
-    std::cout << "Hello, World!\n";
+    std::cout << "Avg Speed : " << totavgspeed << "\n";
+    std::cout << "Density   : " << density << "\n";
+    std::cout << "Flux      : " << flux << "\n";
+    std::cout << "Pass Count: " << Road::passcnt << "\n";
+    system("pause");
     return 0;
 }
-
