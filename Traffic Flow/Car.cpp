@@ -53,3 +53,10 @@ bool Car::switchSafeCondition(int off)
 	//what should the distance be conpared with?
 	//backCarOther->maxspeed is not reasonable
 }
+bool Car::switchBackCondition(int off, int hopeSpeed)
+{
+	if (lane + off < 0 || lane + off >= road->width)
+		return false;
+	int dol = distanceOtherLane(off);
+	return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
+}

@@ -3,6 +3,7 @@
 #define DENSITY 0.1
 #define ITERATION 10000
 #define OMIT_ITERATION 1000
+#define pWWH 0.5
 
 #include <iostream>
 #include <vector>
@@ -17,14 +18,34 @@
 
 struct Result
 {
-	double avgspeed, density, flux;
+	double avgspeed[2], density[2], flux[2];
+	double paras, sumd, sumf;
 	int passcnt;
-	Result(double as, double d, double f, double pc)
-		: avgspeed(as), density(d), flux(f), passcnt(pc)
-	{}
+	Result(double *as, double *d, int pc)
+	{
+		avgspeed[0] = as[0];
+		avgspeed[1] = as[1];
+		density[0] = d[0];
+		density[1] = d[1];
+		flux[0] = avgspeed[0] * density[0];
+		flux[1] = avgspeed[1] * density[1];
+		sumf = flux[0] + flux[1];
+		sumd = density[0] + density[1];
+		paras = sumf / sumd;
+		
+		passcnt = pc;
+	}
+	static void outputHead(FILE *fp)
+	{
+		for (int i = 0; i < 2; i++)
+			fprintf(fp, "avgspeed%d\tdensity%d\tflux%d\t", i, i, i);
+		fprintf(fp, "par avgspeed\tsum density\tsum flux\tpasscnt\n");
+	}
 	void output(FILE *fp)
 	{
-		fprintf(fp, "%lf\t%lf\t%lf\t%d\n", avgspeed, density, flux, passcnt);
+		for (int i = 0; i < 2; i++)
+			fprintf(fp, "%lf\t%lf\t%lf\t", avgspeed[i], density[i], flux[i]);
+		fprintf(fp, "%lf\t%lf\t%lf\t%d\n", paras, sumd, sumf, passcnt);
 	}
 };
 
@@ -37,25 +58,26 @@ Result simulate(double expdensity)
     srand((unsigned)time(0));
 	std::vector<Car *> cars;
     for (int i = 0; i<LENGTH; i++) {
+		for (int l = 0; l < 2; l++) {
 		
-        if (rand() < RAND_MAX * expdensity) {
-			Car *c = new NS(&road, 0, i, SPEEDMAX);
-            road[0][i] = c;
-			cars.push_back(c);
-        }
-        if (rand() < RAND_MAX * expdensity) {
-			Car *c = new WWH(&road, 1, i, SPEEDMAX);
-            road[1][i] = c;
-			cars.push_back(c);
-        }
-        
-    }
+	        if (rand() < RAND_MAX * expdensity) {
+				Car *c;
+				if (rand() < RAND_MAX * pWWH)
+					c = new WWH(&road, l, i, SPEEDMAX);
+				else
+					c = new NS(&road, l, i, SPEEDMAX);
+	            road[l][i] = c;
+				cars.push_back(c);
+	        }
+		}
+	}
     //int* speedData = new int[amount];
     //int speedData[20];
     int flow=0;
     //int passTime=0;
-    long totaltotalspeed = 0;
-    long totaltotalcount = 0;
+    long ttspeed[2] = {0};
+    long ttcount[2] = {0};
+    int cntiteration = 0;
     Road::passcnt = 0;
     for (int i = 0; i < ITERATION; i++) {
 		road.calOrder();
@@ -89,8 +111,12 @@ Result simulate(double expdensity)
         avgSpeed[i] = (totalSpeed) / (cars.size() + 0.0);
         if (i >= OMIT_ITERATION)
         {
-			totaltotalspeed += totalSpeed;
-			totaltotalcount += cars.size();
+			for (int j = 0; j < cars.size(); j++)
+			{
+				ttspeed[cars[j]->lane] += cars[j]->speed;
+				ttcount[cars[j]->lane]++;
+			}
+			cntiteration++;
 		}
         /*
         road.print();
@@ -103,7 +129,7 @@ Result simulate(double expdensity)
         	printf("iteration %d%%\n", i * 100 / ITERATION);
         */
     }
-    double totavgspeed = (double)totaltotalspeed / totaltotalcount;
+    double totavgspeed = (double)(ttspeed[0] + ttspeed[1]) / (ttcount[0] + ttcount[1]);
     double density = (cars.size() / (double)road.length);
     double flux = totavgspeed * density;
     // insert code here...
@@ -111,18 +137,25 @@ Result simulate(double expdensity)
     std::cout << "Density   : " << density << "\n";
     std::cout << "Flux      : " << flux << "\n";
     std::cout << "Pass Count: " << Road::passcnt << "\n";
-    return Result(totavgspeed, density, flux, Road::passcnt);
+    //return Result(totavgspeed, density, flux, Road::passcnt);
+    double as[2], d[2];
+    as[0] = ttspeed[0] / (double)ttcount[0];
+    as[1] = ttspeed[1] / (double)ttcount[1];
+    d[0] = ttcount[0] / (double)cntiteration / (double)road.length;
+    d[1] = ttcount[1] / (double)cntiteration / (double)road.length;
+    return Result(as, d, Road::passcnt);
 }
 
 int main(int argc, const char * argv[])
 {
 	int i;
 	FILE *fp;
-	fp = fopen("result.txt", "w");
+	fp = fopen("result 0.5WWH, 0.1-0.4density, leftpass.txt", "w");
+	Result::outputHead(fp);
 	for (i = 0; i < 100; i++)
 	{
 		printf("Simulation #%d\n", i);
-		simulate(rand() / (double)RAND_MAX).output(fp);
+		simulate(0.05 + 0.15 * (rand() / (double)RAND_MAX)).output(fp);
 		fflush(fp);
 	}
 	fclose(fp);

@@ -25,20 +25,26 @@ public:
 		int off = (int)(!lane) - lane;
 		//printf("switch %d, safe %d\n", (int)switchCondition(off, hopeSpeed), (int)switchSafeCondition(off));
 		//printf("dtl = %d, off = %d\n", distanceThisLane(), off);
-		if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+		/*
+		//freepass
+		if (switchCondition(off, maxspeed) && switchSafeCondition(off))
 			pass = rand() < (RAND_MAX * ppass);
+		*/
+		//leftpass
+		if (lane == 1)
+		{
+			if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+				pass = rand() < (RAND_MAX * ppass);
+		}
+		if (lane == 0)
+		{
+			if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
+				pass = true;
+		}
 		
         //Speed up
         spd = std::min(maxspeed , spd + 1);
         //Deterministic speed down
-        /*
-        Car *frontCar = road->frontCar(lane, (place + 1) % road->length);
-        Car *frontCarOther = road->frontCar(!lane, place);
-        Car *backCarOther = road->backCar(!lane, place);
-        int distanceThisLane = frontCar ? (frontCar->place - this->place + road->length) % road->length : road->length;
-        int distanceOtherLane = frontCarOther ? (frontCarOther->place - this->place + road->length) % road->length : road->length;
-        int distanceSafe = backCarOther ? (this->place - backCarOther->place + road->length) % road->length : road->length;
-        */
         if (pass)
         	spd = std::max(std::min(std::min(distanceOtherLane(off), distanceThisLane()) - 1, spd), 0); //-1 or not
 		else
@@ -90,12 +96,27 @@ public:
     void Motion()
     {
 		//Pass Conditions
-		bool pass = false;;
+		bool pass = false;
 		int off = (int)(!lane) - lane;
 		int spd = speed;
+		int hopeSpeed = maxspeed;
+		/*
+		//freepass
 		if (switchCondition(off, maxspeed) && switchSafeCondition(off))
 			pass = rand() < (RAND_MAX * ppass);
-			
+		*/
+		//leftpass
+		if (lane == 1)
+		{
+			if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+				pass = rand() < (RAND_MAX * ppass);
+		}
+		if (lane == 0)
+		{
+			if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
+				pass = true;
+		}
+		
 		//Speed up
 		if (pass)
 			spd = std::min(std::min(distanceOtherLane(off), distanceThisLane()) - 1, maxspeed); //-1 or not
