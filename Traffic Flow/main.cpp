@@ -1,9 +1,12 @@
 #define LENGTH 1000
-#define SPEEDMAX 5
-#define DENSITY 0.1
+#define DENSITY_MIN 0.01
+#define DENSITY_MAX 0.15
 #define ITERATION 10000
 #define OMIT_ITERATION 1000
 #define pWWH 0.5
+#define SPEEDMAX1 6
+#define pSM1 0.5
+#define SPEEDMAX2 4
 
 #include <iostream>
 #include <vector>
@@ -49,23 +52,23 @@ struct Result
 	}
 };
 
-float avgSpeed[ITERATION]={0};
-Road road(2, LENGTH);
+//float avgSpeed[ITERATION]={0};
 Result simulate(double expdensity)
 {
+	Road road(2, LENGTH);
     std::cout << "Hello, World!\n";
     //srand(0);
-    srand((unsigned)time(0));
 	std::vector<Car *> cars;
     for (int i = 0; i<LENGTH; i++) {
 		for (int l = 0; l < 2; l++) {
 		
 	        if (rand() < RAND_MAX * expdensity) {
 				Car *c;
+				int maxspeed = (rand() < RAND_MAX * pSM1) ? SPEEDMAX1 : SPEEDMAX2;
 				if (rand() < RAND_MAX * pWWH)
-					c = new WWH(&road, l, i, SPEEDMAX);
+					c = new WWH(&road, l, i, maxspeed);
 				else
-					c = new NS(&road, l, i, SPEEDMAX);
+					c = new NS(&road, l, i, maxspeed);
 	            road[l][i] = c;
 				cars.push_back(c);
 	        }
@@ -108,7 +111,7 @@ Result simulate(double expdensity)
 		int totalSpeed = 0;
 		for (int j = 0; j < cars.size(); j++)
 			totalSpeed += cars[j]->speed;
-        avgSpeed[i] = (totalSpeed) / (cars.size() + 0.0);
+        //avgSpeed[i] = (totalSpeed) / (cars.size() + 0.0);
         if (i >= OMIT_ITERATION)
         {
 			for (int j = 0; j < cars.size(); j++)
@@ -146,18 +149,36 @@ Result simulate(double expdensity)
     return Result(as, d, Road::passcnt);
 }
 
+char FILENAME[2048];
+
 int main(int argc, const char * argv[])
 {
 	int i;
 	FILE *fp;
-	fp = fopen("result 0.5WWH, 0.1-0.4density, leftpass.txt", "w");
-	Result::outputHead(fp);
-	for (i = 0; i < 100; i++)
+    
+    Car::leftpass = true;
+    Car::freepass = false;
+	sprintf(FILENAME, "result %.2lfWWH, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %s.txt", pWWH, DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, Car::leftpass ? "leftpass" : Car::freepass ? "freepass" : "nopass");
+	printf("outputfile: %s\n", FILENAME);
+	
+	fp = fopen(FILENAME, "r");
+	if (!fp)
+	{
+		fclose(fp);
+		fp = fopen(FILENAME, "w");
+		Result::outputHead(fp);
+		fclose(fp);
+	}
+	else
+		fclose(fp);
+    srand((unsigned)time(0));
+    
+	for (i = 0; i < 1000; i++)
 	{
 		printf("Simulation #%d\n", i);
-		simulate(0.05 + 0.15 * (rand() / (double)RAND_MAX)).output(fp);
-		fflush(fp);
+		fp = fopen(FILENAME, "a");
+		simulate(DENSITY_MIN + (DENSITY_MAX - DENSITY_MIN) * (rand() / (double)RAND_MAX)).output(fp);
+		fclose(fp);
 	}
-	fclose(fp);
 	return 0;
 }

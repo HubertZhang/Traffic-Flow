@@ -1,5 +1,11 @@
+#include <iostream>
+
 #include "Car.h"
 #include "Road.h"
+
+bool Car::leftpass = false;
+bool Car::freepass = false;
+double Car::driverpos = 0.25;
 
 //static int totalSpeed;
 Car::Car(Road *road, int lane, int place, int maxspeed, int speed){
@@ -35,6 +41,22 @@ int Car::distanceBack(int off)
 		return -1;
 	Car *backCarOther = road->backCar(lane + off, place);
     return backCarOther && backCarOther != this ? (this->place - backCarOther->place + road->length) % road->length : road->length;
+}
+int Car::distanceFrontSeen(int off)
+{
+	if (lane + off < 0 || lane + off >= road->width)
+		return -1;
+	double p;
+	if (off == 1)
+		p = 1.0 - driverpos;
+	else if (off == -1)
+		p = driverpos;
+	else
+		return -1;
+	if (p == 0.0)
+		return road->length;
+	double d = distanceThisLane() * (1.0 + 1.0 / p);
+	return std::min((int)(d + 1.0 - 1E-7), road->length);
 }
 
 bool Car::switchCondition(int off, int hopeSpeed) //offs = 1 or -1
