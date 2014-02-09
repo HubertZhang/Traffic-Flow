@@ -6,16 +6,18 @@
 class NS : public Car
 {
 public:
-	NS(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5, double ppass = 0.5)
-		: Car(road, lane, place, maxspeed, speed)
+	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5, double ppass = 0.5)
+		: Car(id, road, lane, place, maxspeed, speed)
 	{
 		this->pslow = pslow;
 		this->ppass = ppass;
 	}
+	/*
 	Car *duplicate()
 	{
 		return new NS(road, lane, place, maxspeed, speed, pslow, ppass);
 	}
+	*/
     void Motion()
     {
 		//Pass Conditions
@@ -102,16 +104,18 @@ protected:
 class WWH : public Car
 {
 public:
-	WWH(Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5, double ppass = 0.5)
-		: Car(road, lane, place, maxspeed, speed)
+	WWH(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, double pslow = 0.5, double ppass = 0.5)
+		: Car(id, road, lane, place, maxspeed, speed)
 	{
 		this->pslow = pslow;
 		this->ppass = ppass;
 	}
+	/*
 	Car *duplicate()
 	{
 		return new WWH(road, lane, place, maxspeed, speed, pslow, ppass);
 	}
+	*/
     void Motion()
     {
 		//Pass Conditions
@@ -194,7 +198,7 @@ protected:
 class Block : public Car //a block that does not move
 {
 public:
-	Block(Road *road, int lane, int place, int maxspeed = 0) : Car(road, lane, place, maxspeed, 0)
+	Block(int id, Road *road, int lane, int place, int maxspeed = 0) : Car(id, road, lane, place, maxspeed, 0)
 	{}
     void Motion()
     {}

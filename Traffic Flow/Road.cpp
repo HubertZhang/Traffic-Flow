@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <vector>
 
 #include "Car.h"
 #include "Road.h"
@@ -26,6 +27,7 @@ Road::Road(int w, int l)
 	fill0Buffer();
 	calOrder();
 	std::cout << "order init finished\n";
+	carsbuf.clear();
 }
 Road::~Road()
 {
@@ -41,7 +43,23 @@ Road::~Road()
 	delete tdata;
 	delete frontpos;
 	delete backpos;
+	
+	for (i = 0; i < carsbuf.size(); i++)
+		delete carsbuf[i];
 }
+void Road::registerCars(std::vector<Car *> _cars)
+{
+	cars = _cars;
+	fill0Data();
+	fill0Buffer();
+	int i;
+	for (i = 0; i < cars.size(); i++)
+		data[cars[i]->lane][cars[i]->place] = cars[i];
+	carsbuf.clear();
+	for (i = 0; i < cars.size(); i++)
+		carsbuf.push_back(new Car(*cars[i]));
+}
+		
 void Road::calOrder()
 {
 	int l, k, sk, pk;
@@ -101,6 +119,7 @@ Car *Road::backCar(int l, int k)
 		return 0;
 	return data[l][backpos[l][k]];
 }
+/*
 void Road::carMove(int sl, int sk, int tl, int tk) //cars with speed 0 also need to call this method
 {
 	if (sl != tl)
@@ -108,27 +127,41 @@ void Road::carMove(int sl, int sk, int tl, int tk) //cars with speed 0 also need
 	tdata[tl][tk] = data[sl][sk];
 	data[sl][sk] = data[sl][sk]->duplicate();
 }
+*/
 void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the info of the car
 {
 	Car *c = data[sl][sk];
+	//printf("Car move\n");
 	if (!c)
 	{
 		printf("Moving null pointer!\n");
+		int j = 0;
+		int i = 1 / j;
+		passcnt += i;
 		return;
 	}
 	if (sl + offl < 0 || sl + offl >= width)
 	{
 		printf("Moving off road!\n");
+		int j = 0;
+		int i = 1 / j;
+		passcnt += i;
 		return;
 	}
 	if (offl != 0)
 		passcnt++;
 	int tl = sl + offl;
 	int tk = (sk + offk) % length;
+	if (tdata[tl][tk])
+	{
+		printf("Car crash or buffer not cleared!\n");
+	}
 	tdata[tl][tk] = c;
-	data[sl][sk] = c->duplicate();
-	c->lane += offl;
-	c->place = (c->place + offk) % length;
+	//data[sl][sk] = c->duplicate();
+	carsbuf[c->id]->copy(*c);
+	data[sl][sk] = carsbuf[c->id];
+	c->lane = tl;
+	c->place = tk;
 }
 void Road::flush() //must flush after all cars have been moved. This updates the cellular automaton
 {
@@ -145,7 +178,8 @@ void Road::flush() //must flush after all cars have been moved. This updates the
 		exit(0);
 		while (1);
 	}*/
-	clearBuffer();
+	//clearBuffer();
+	fill0Buffer();
 }
 void Road::fill0Data()
 {
@@ -165,6 +199,7 @@ void Road::fill0Buffer()
 			tdata[i][j] = 0;
 		}
 }
+/*
 void Road::clearData()
 {
 	int i, j;
@@ -187,6 +222,7 @@ void Road::clearBuffer()
 			tdata[i][j] = 0;
 		}
 }
+*/
 Car **Road::operator [](unsigned s)
 {
 	return data[s];

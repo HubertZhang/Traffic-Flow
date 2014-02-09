@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "Car.h"
 #include "Road.h"
@@ -10,7 +11,8 @@ bool Car::blindness = false;
 double Car::driverpos = 0.25;
 
 //static int totalSpeed;
-Car::Car(Road *road, int lane, int place, int maxspeed, int speed){
+Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){
+	this->id = id;
 	this->road = road;
     this->lane = lane;
     this->place = place;
@@ -19,10 +21,29 @@ Car::Car(Road *road, int lane, int place, int maxspeed, int speed){
     
     this->driverdepth = 0.4;
 }
+Car::Car(const Car &b)
+{
+	copy(b);
+}
 Car::~Car()
 {}
 //virtual Car *duplicate() = 0;
-//virtual void Motion() = 0;
+void Car::Motion()
+{
+	printf("Error! Moving a virtual car!");
+}
+void Car::copy(const Car &b)
+{
+	road = b.road;
+	lane = b.lane;
+	place = b.place;
+	maxspeed = b.maxspeed;
+	speed = b.speed;
+	
+	id = b.id;
+	
+	driverdepth = b.driverdepth;
+}
 
 int Car::distanceThisLane()
 {

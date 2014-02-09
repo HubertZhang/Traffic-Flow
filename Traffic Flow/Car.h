@@ -10,10 +10,12 @@ public:
 	static bool blindness;
 	static double driverpos; //position of driver to the left side of the car
     //static int totalSpeed;
-    Car(Road *road, int lane, int place, int maxspeed, int speed = 0);
+    Car(int id, Road *road, int lane, int place, int maxspeed, int speed = 0);
+    Car(const Car &b);
     ~Car();
-    virtual Car *duplicate() = 0;
-    virtual void Motion() = 0;
+    //virtual Car *duplicate() = 0;
+    virtual void Motion();
+    void copy(const Car &b);
 	
 	int distanceThisLane();
 	int distanceOtherLane(int off);
@@ -29,6 +31,7 @@ public:
     int place;
     int speed;
     int maxspeed;
+    int id;
     
     double driverdepth;
 };

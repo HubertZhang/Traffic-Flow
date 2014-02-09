@@ -66,14 +66,16 @@ Result simulate(double expdensity)
 				Car *c;
 				int maxspeed = (rand() < RAND_MAX * pSM1) ? SPEEDMAX1 : SPEEDMAX2;
 				if (rand() < RAND_MAX * pWWH)
-					c = new WWH(&road, l, i, maxspeed);
+					c = new WWH(cars.size(), &road, l, i, maxspeed);
 				else
-					c = new NS(&road, l, i, maxspeed);
-	            road[l][i] = c;
+					c = new NS(cars.size(), &road, l, i, maxspeed);
+	            //road[l][i] = c;
 				cars.push_back(c);
 	        }
 		}
 	}
+	road.registerCars(cars);
+	printf("registering complete\n");
     //int* speedData = new int[amount];
     //int speedData[20];
     int flow=0;
