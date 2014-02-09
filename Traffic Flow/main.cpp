@@ -86,7 +86,7 @@ struct Result
 	    std::cout << "Pass Count: " << switchcnt << "\n";
 		for (int i = 0; i < width; i++)
 			fprintf(fp, "%lf\t%lf\t%lf\t%d\t%d\t", avgspeed[i], density[i], flux[i], switchtoL[i], switchtoR[i]);
-		fprintf(fp, "%lf\t%lf\t%lf\t%d\t%d\n", paras, sumd, sumdexit, sumf, switchcnt, suddenbrake);
+		fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%d\t%d\n", paras, sumd, sumdexit, sumf, switchcnt, suddenbrake);
 	}
 };
 
@@ -125,7 +125,7 @@ Result simulate(int width, double expdensity)
 	        }
 		}
 	}
-	double pe = exitcnt / carcnt;
+	double pe = exitcnt / (double)carcnt;
 	road.registerCars(cars);
 	printf("registering complete\n");
     //int* speedData = new int[amount];
@@ -227,8 +227,8 @@ int main(int argc, const char * argv[])
     
     Road::exits = true;
     Car::leftpass = false;
-    Car::rightpass = false;
-    Car::freepass = true;
+    Car::rightpass = true;
+    Car::freepass = false;
     Car::blindness = true;
     char *pass = (char *)(Car::leftpass ? "leftpass" : Car::rightpass ? "rightpass" : Car::freepass ? "freepass" : "nopass");
     char *blnd = (char *)(Car::blindness ? "blindness" : "no blindness");
