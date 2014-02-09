@@ -166,6 +166,10 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 	}
 	if (offl != 0)
 	{
+        c->distanceToFrontCar=c->distanceThisLane();
+        c->distanceIncreaseTime=0;
+        c->canReturn=false;
+        c->oldFrontCarID=frontCar(sl, sk)->id;
 		if (offl == 1)
 			switchtoR[sl]++;
 		if (offl == -1)

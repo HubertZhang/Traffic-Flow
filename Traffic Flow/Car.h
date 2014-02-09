@@ -40,6 +40,12 @@ public:
     int maxspeed;
     int id;
     
+    int distanceToFrontCar;
+    int distanceIncreaseTime;//time that distance to old front car has increased
+    int oldFrontCarID;
+    bool canReturn;//have passed a car
+    
+    
     double driverdepth;
 };
 

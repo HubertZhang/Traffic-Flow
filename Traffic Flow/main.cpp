@@ -7,7 +7,7 @@
 //#define pWWH 0.5
 #define SPEEDMAX1 22
 #define pSM1 0.5
-#define SPEEDMAX2 15
+#define SPEEDMAX2 12
 #define pEXIT 0.1
 
 #include <iostream>
@@ -208,9 +208,9 @@ int main(int argc, const char * argv[])
 	FILE *fp;
     
     Road::exits = false;
-    Car::leftpass = false;
+    Car::leftpass = true;
     Car::rightpass = false;
-    Car::freepass = true;
+    Car::freepass = false;
     Car::blindness = true;
     char *pass = (char *)(Car::leftpass ? "leftpass" : Car::rightpass ? "rightpass" : Car::freepass ? "freepass" : "nopass");
     char *blnd = (char *)(Car::blindness ? "blindness" : "no blindness");

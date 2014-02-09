@@ -22,6 +22,9 @@ Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){
     this->speed = speed;
     
     this->driverdepth = 0.4;
+    
+    this->oldFrontCarID=-1;
+    this->canReturn=false;
 }
 Car::Car(const Car &b)
 {
@@ -108,7 +111,28 @@ bool Car::switchBackCondition(int off, int hopeSpeed)
 	if (lane + off < 0 || lane + off >= road->width)
 		return false;
 	int dol = distanceOtherLane(off);
-	return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
+    if (oldFrontCarID==-1) {
+        return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
+    }
+    int newdistance =(road->cars[oldFrontCarID]->place-this->place+road->length)%road->length;
+    if (canReturn) {
+        return dol-1>0;//If possible, return to original lane
+    }
+    else if (newdistance<=0) {
+        canReturn=true;
+        return dol-1>0;
+    }
+    else if (newdistance>distanceToFrontCar)
+    {
+        distanceIncreaseTime++;
+        if (distanceIncreaseTime==3) {
+            canReturn=true;
+            return dol-1>0;
+        }
+    }
+    distanceToFrontCar=newdistance;
+    return false;
+	//return hopeSpeed <= dol - 1;// || distanceThisLane() <= dol;
 }
 
 int Car::currentSpeedLimit()
