@@ -9,6 +9,8 @@ bool Car::rightpass = false;
 bool Car::freepass = false;
 bool Car::blindness = false;
 double Car::driverpos = 0.25;
+int Car::brake[MAXBRAKE] = {0};
+int Car::suddenbrake = 0;
 
 //static int totalSpeed;
 Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){

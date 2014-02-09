@@ -5,8 +5,8 @@
 #include "Car.h"
 #include "Road.h"
 
-int Road::switchtoL[4] = {0};
-int Road::switchtoR[4] = {0};
+int Road::switchtoL[MAXWIDTH] = {0};
+int Road::switchtoR[MAXWIDTH] = {0};
 int Road::switchcnt = 0;
 bool Road::exits = false;
 int Road::exitbuffer = 45, Road::enterbuffer = 81;
@@ -18,6 +18,11 @@ Road::Road(int w, int l)
 {
 	width = w;
 	length = l;
+	if (exits)
+	{
+		width++;
+		length += offlength;
+	}
 	data = new Car **[width];
 	for (int i = 0; i < width; i++)
 		data[i] = new Car *[length];
@@ -30,6 +35,9 @@ Road::Road(int w, int l)
 	backpos = new int *[width];
 	for (int i = 0; i < width; i++)
 		backpos[i] = new int[length];
+		
+	length = l;
+		
 	fill0Data();
 	fill0Buffer();
 	calOrder();
@@ -73,19 +81,20 @@ void Road::calOrder()
 	//std::cout << "calOrder start, width = " << width << ", length = " << length << "\n";
 	for (l = 0; l < width; l++)
 	{
-		for (sk = 0; sk < length && data[l][sk] == 0; sk++);
+		int len = lengthOf(l);
+		for (sk = 0; sk < len && data[l][sk] == 0; sk++);
 		//std::cout << "calOrder iteration " << l << ", sk = " << sk << "\n";
-		if (sk >= length) //no vehicles on the lane
+		if (sk >= len) //no vehicles on the lane
 		{
-			for (k = 0; k < length; k++)
+			for (k = 0; k < len; k++)
 				frontpos[l][k] = -1;
-			for (k = 0; k < length; k++)
+			for (k = 0; k < len; k++)
 				backpos[l][k] = -1;
 		}
 		else
 		{
 			pk = sk;
-			for (k = (sk + 1) % length; k != sk; k = (k + 1) % length)
+			for (k = (sk + 1) % len; k != sk; k = (k + 1) % len)
 			{
 				backpos[l][k] = pk;
 				if (data[l][k])
@@ -96,7 +105,7 @@ void Road::calOrder()
 				pk = k;
 
 			pk = sk;
-			for (k = (sk - 1 + length) % length; k != sk; k = (k - 1 + length) % length)
+			for (k = (sk - 1 + len) % len; k != sk; k = (k - 1 + len) % len)
 			{
 				if (data[l][k])
 					pk = k;
@@ -107,9 +116,9 @@ void Road::calOrder()
 			frontpos[l][k] = pk;
 		}
 		/*
-		for (k = 0; k < length; k++)
+		for (k = 0; k < len; k++)
 			std::cout << "frontpos[" << l << "][" << k << "] = " << frontpos[l][k] << "\n";
-		for (k = 0; k < length; k++)
+		for (k = 0; k < len; k++)
 			std::cout << "backpos[" << l << "][" << k << "] = " << backpos[l][k] << "\n";
 		*/
 	}
@@ -164,7 +173,7 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 		switchcnt++;
 	}
 	int tl = sl + offl;
-	int tk = (sk + offk) % length;
+	int tk = (sk + offk) % lengthOf(tl);
 	if (tdata[tl][tk])
 	{
 		printf("Car crash or buffer not cleared!\n");
@@ -198,7 +207,7 @@ void Road::fill0Data()
 {
 	int i, j;
 	for (i = 0; i < width; i++)
-		for (j = 0; j < length; j++)
+		for (j = 0; j < lengthOf(i); j++)
 		{
 			data[i][j] = 0;
 		}
@@ -207,7 +216,7 @@ void Road::fill0Buffer()
 {
 	int i, j;
 	for (i = 0; i < width; i++)
-		for (j = 0; j < length; j++)
+		for (j = 0; j < lengthOf(i); j++)
 		{
 			tdata[i][j] = 0;
 		}
@@ -217,7 +226,7 @@ void Road::clearData()
 {
 	int i, j;
 	for (i = 0; i < width; i++)
-		for (j = 0; j < length; j++)
+		for (j = 0; j < lengthOf(i); j++)
 		{
 			if (data[i][j])
 				delete data[i][j];
@@ -228,7 +237,7 @@ void Road::clearBuffer()
 {
 	int i, j;
 	for (i = 0; i < width; i++)
-		for (j = 0; j < length; j++)
+		for (j = 0; j < lengthOf(i); j++)
 		{
 			if (tdata[i][j])
 				delete tdata[i][j];
@@ -238,6 +247,11 @@ void Road::clearBuffer()
 */
 int Road::speedLimit(int l, int k)
 {
+	if (exits)
+	{
+		if (l == width - 1 && k >= length - exitbuffer)
+			return offspeedlimit;
+	}
 	return speedlimit;
 }
 Car **Road::operator [](unsigned s)
@@ -248,9 +262,9 @@ bool Road::findRepetition()
 {
 	int l, k, l2, k2;
 	for (l = 0; l < width; l++)
-		for (k = 0; k < length; k++)
+		for (k = 0; k < lengthOf(l); k++)
 			for (l2 = 0; l2 < width; l2++)
-				for (k2 = 0; k2 < length; k2++)
+				for (k2 = 0; k2 < lengthOf(l2); k2++)
 					if ((l != l2 || k != k2) && data[l][k] == data[l2][k2] && data[l][k])
 						return true;
 	return false;
@@ -262,9 +276,19 @@ void Road::print(Car ***d, FILE *out)
 	int l, k;
 	for (l = 0; l < width; l++)
 	{
-		for (k = 0; k < length; k++)
+		for (k = 0; k < lengthOf(l); k++)
 			fputc(d[l][k] ? ((long)d[l][k] % 23) + 'A' : '.', out);
 		fprintf(out, "\n");
 	}
 	fprintf(out, "\n");
+}
+
+int Road::lengthOf(int l)
+{
+	if (exits)
+	{
+		if (l == width - 1)
+			return length + offlength;
+	}
+	return length;
 }

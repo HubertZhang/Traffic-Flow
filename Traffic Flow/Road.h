@@ -1,12 +1,14 @@
 #ifndef ROAD_H
 #define ROAD_H
 
+#define MAXWIDTH 4
+
 #include <cstdio>
 
 class Road
 {
 public:
-	static int switchtoL[4], switchtoR[4];
+	static int switchtoL[MAXWIDTH], switchtoR[MAXWIDTH];
 	static int switchcnt;
 	static bool exits; //whether the freeway has an entrance and an exit
 	static int exitbuffer, enterbuffer; //buffer length
@@ -32,11 +34,13 @@ public:
 	bool findRepetition();
 	void print(Car ***d = 0, FILE *out = stdout);
 	
-	int width, length;
+	int width, length; //width includes exits, length does not include offlength
 	//Car *data[width][length];
 	Car ***data, ***tdata;
 	int **frontpos, **backpos;
 	std::vector<Car *> cars, carsbuf;
+	
+	int lengthOf(int l);
 };
 
 #endif

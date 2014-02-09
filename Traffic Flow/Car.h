@@ -1,6 +1,8 @@
 #ifndef CAR_H
 #define CAR_H
 
+#define MAXBRAKE 50
+
 class Road;
 class Car
 {
@@ -9,6 +11,9 @@ public:
 	static bool freepass;
 	static bool blindness;
 	static double driverpos; //position of driver to the left side of the car
+	static int brake[MAXBRAKE];
+	static int suddenbrake;
+	
     //static int totalSpeed;
     Car(int id, Road *road, int lane, int place, int maxspeed, int speed = 0);
     Car(const Car &b);
