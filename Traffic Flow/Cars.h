@@ -6,9 +6,12 @@
 class NS : public Car
 {
 public:
-	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, int maxacc = 3, int maxdec = 10, double pslow = 0.5, double ppass = 0.5)
+	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, int maxacc = 3, int maxdec = 10, int rnddec = 3, double pslow = 0.5, double ppass = 0.5)
 		: Car(id, road, lane, place, maxspeed, speed)
 	{
+		this->maxacc = maxacc;
+		this->maxdec = maxdec;
+		this->rnddec = rnddec;
 		this->pslow = pslow;
 		this->ppass = ppass;
 	}
@@ -23,7 +26,8 @@ public:
 		//Pass Conditions
 		bool pass = false;
 		int spd = this->speed;
-		int hopeSpeed = std::min(maxspeed , spd + 1);
+		int posmaxspeed = std::min(maxspeed, currentSpeedLimit());
+		int hopeSpeed = std::min(posmaxspeed , spd + maxacc);
 		int off = (int)(!lane) - lane;
 		//printf("switch %d, safe %d\n", (int)switchCondition(off, hopeSpeed), (int)switchSafeCondition(off));
 		//printf("dtl = %d, off = %d\n", distanceThisLane(), off);
@@ -61,7 +65,7 @@ public:
 		}
 		
         //Speed up
-        spd = std::min(maxspeed , spd + 1);
+        spd = std::min(posmaxspeed , spd + maxacc);
         //Deterministic speed down
         int dol = distanceOtherLane(off);
 		if (blindness)
@@ -74,7 +78,7 @@ public:
         //Undeterministic speed down
         if(rand() < RAND_MAX * pslow)
         {
-            spd = std::max(spd - 1, 0);
+            spd = std::max(spd - rnddec, 0);
         }
         
         //Move
@@ -82,6 +86,7 @@ public:
         speed = spd;
     }
 protected:
+	int maxacc, maxdec, rnddec;
 	double pslow, ppass;
 };
 
