@@ -3,7 +3,7 @@
 #define DENSITY_MAX 0.4
 #define ITERATION 10000
 #define OMIT_ITERATION 1000
-#define pWWH 0.5
+//#define pWWH 0.5
 #define SPEEDMAX1 22
 #define pSM1 0.5
 #define SPEEDMAX2 15
@@ -70,10 +70,7 @@ Result simulate(double expdensity)
 	        if (rand() < RAND_MAX * expdensity) {
 				Car *c;
 				int maxspeed = (rand() < RAND_MAX * pSM1) ? SPEEDMAX1 : SPEEDMAX2;
-				if (rand() < RAND_MAX * pWWH)
-					c = new WWH(cars.size(), &road, l, i, maxspeed);
-				else
-					c = new NS(cars.size(), &road, l, i, maxspeed);
+				c = new NS(cars.size(), &road, l, i, maxspeed);
 	            //road[l][i] = c;
 				cars.push_back(c);
 	        }
