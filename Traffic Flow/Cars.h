@@ -44,12 +44,28 @@ public:
 					pass = true;
 			}
 		}
+		if (rightpass)
+		{
+			if (lane == 0)
+			{
+				if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+					pass = rand() < (RAND_MAX * ppass);
+			}
+			if (lane == 1)
+			{
+				if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
+					pass = true;
+			}
+		}
 		
         //Speed up
         spd = std::min(maxspeed , spd + 1);
         //Deterministic speed down
+        int dol = distanceOtherLane(off);
+		if (blindness)
+        	dol = std::min(dol, distanceFrontSeen(off) + 1);
         if (pass)
-        	spd = std::max(std::min(std::min(distanceOtherLane(off), distanceThisLane()) - 1, spd), 0); //-1 or not
+        	spd = std::max(std::min(std::min(dol, distanceThisLane()) - 1, spd), 0); //-1 or not
 		else
         	spd = std::max(std::min(distanceThisLane() - 1, spd), 0);
         
@@ -122,8 +138,24 @@ public:
 					pass = true;
 			}
 		}
+		if (rightpass)
+		{
+			if (lane == 0)
+			{
+				if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+					pass = rand() < (RAND_MAX * ppass);
+			}
+			if (lane == 1)
+			{
+				if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
+					pass = true;
+			}
+		}
 		
 		//Speed up
+        int dol = distanceOtherLane(off);
+		if (blindness)
+        	dol = std::min(dol, distanceFrontSeen(off) + 1);
 		if (pass)
 			spd = std::min(std::min(distanceOtherLane(off), distanceThisLane()) - 1, maxspeed); //-1 or not
 		else

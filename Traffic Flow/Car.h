@@ -5,8 +5,9 @@ class Road;
 class Car
 {
 public:
-	static bool leftpass;
+	static bool leftpass, rightpass;
 	static bool freepass;
+	static bool blindness;
 	static double driverpos; //position of driver to the left side of the car
     //static int totalSpeed;
     Car(Road *road, int lane, int place, int maxspeed, int speed = 0);
@@ -28,6 +29,8 @@ public:
     int place;
     int speed;
     int maxspeed;
+    
+    double driverdepth;
 };
 
 #endif

@@ -13,7 +13,7 @@ public:
 	void calOrder();
 	Car *frontCar(int l, int k);
 	Car *backCar(int l, int k);
-	void carMove(int sl, int sk, int tl, int tk); //cars with speed 0 also need to call this method
+	void carMove(int sl, int sk, int tl, int tk); //cars with speed 0 also need to call this method. Deprecated
 	void carMoveOff(int sl, int sk, int offl, int offk); //cars with speed 0 also need to call this method. This modifies the position of the car
 	void flush(); //must flush after all cars have been moved. This updates the cellular automaton
 	void fill0Data();

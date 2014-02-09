@@ -4,7 +4,9 @@
 #include "Road.h"
 
 bool Car::leftpass = false;
+bool Car::rightpass = false;
 bool Car::freepass = false;
+bool Car::blindness = false;
 double Car::driverpos = 0.25;
 
 //static int totalSpeed;
@@ -14,6 +16,8 @@ Car::Car(Road *road, int lane, int place, int maxspeed, int speed){
     this->place = place;
     this->maxspeed = maxspeed;
     this->speed = speed;
+    
+    this->driverdepth = 0.4;
 }
 Car::~Car()
 {}
@@ -55,8 +59,9 @@ int Car::distanceFrontSeen(int off)
 		return -1;
 	if (p == 0.0)
 		return road->length;
-	double d = distanceThisLane() * (1.0 + 1.0 / p);
-	return std::min((int)(d + 1.0 - 1E-7), road->length);
+	double gap = distanceThisLane() - 1.0;
+	double d = (gap + driverdepth) / p + gap;
+	return std::min((int)(d + 1.0 - 1E-7) /*ceil(d)*/, road->length);
 }
 
 bool Car::switchCondition(int off, int hopeSpeed) //offs = 1 or -1

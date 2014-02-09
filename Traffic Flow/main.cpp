@@ -1,6 +1,6 @@
 #define LENGTH 1000
 #define DENSITY_MIN 0.01
-#define DENSITY_MAX 0.15
+#define DENSITY_MAX 0.4
 #define ITERATION 10000
 #define OMIT_ITERATION 1000
 #define pWWH 0.5
@@ -156,9 +156,12 @@ int main(int argc, const char * argv[])
 	int i;
 	FILE *fp;
     
-    Car::leftpass = true;
-    Car::freepass = false;
-	sprintf(FILENAME, "result %.2lfWWH, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %s.txt", pWWH, DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, Car::leftpass ? "leftpass" : Car::freepass ? "freepass" : "nopass");
+    Car::leftpass = false;
+    Car::rightpass = false;
+    Car::freepass = true;
+    Car::blindness = true;
+    char *pass = (char *)(Car::leftpass ? "leftpass" : Car::rightpass ? "rightpass" : Car::freepass ? "freepass" : "nopass");
+	sprintf(FILENAME, "result %.2lfWWH, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %s, %s, driverpos%.2lf.txt", pWWH, DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, pass, Car::blindness ? "blindness" : "no blindness", Car::driverpos);
 	printf("outputfile: %s\n", FILENAME);
 	
 	fp = fopen(FILENAME, "r");
