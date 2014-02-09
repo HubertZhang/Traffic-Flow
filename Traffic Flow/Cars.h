@@ -25,6 +25,10 @@ public:
 		return new NS(road, lane, place, maxspeed, speed, pslow, ppass);
 	}
 	*/
+	void setToExit(bool b = true)
+	{
+		toexit = b;
+	}
     void Motion()
     {
 		//Pass Conditions

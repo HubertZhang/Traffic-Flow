@@ -24,6 +24,7 @@ public:
 	Car *backCar(int l, int k);
 	//void carMove(int sl, int sk, int tl, int tk); //cars with speed 0 also need to call this method. Deprecated
 	void carMoveOff(int sl, int sk, int offl, int offk); //cars with speed 0 also need to call this method. This modifies the position of the car
+	bool moveOffRoad(int sl, int sk, int offl, int offk = 0);
 	void flush(); //must flush after all cars have been moved. This updates the cellular automaton
 	void fill0Data();
 	void fill0Buffer();

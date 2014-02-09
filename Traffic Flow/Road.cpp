@@ -156,7 +156,7 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 		switchcnt += i;
 		return;
 	}
-	if (sl + offl < 0 || sl + offl >= width)
+	if (moveOffRoad(sl, sk, offl, offk))
 	{
 		printf("Moving off road!\n");
 		int j = 0;
@@ -177,6 +177,9 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 	if (tdata[tl][tk])
 	{
 		printf("Car crash or buffer not cleared!\n");
+		int j = 0;
+		int i = 1 / j;
+		switchcnt += i;
 	}
 	tdata[tl][tk] = c;
 	//data[sl][sk] = c->duplicate();
@@ -184,6 +187,11 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 	data[sl][sk] = carsbuf[c->id];
 	c->lane = tl;
 	c->place = tk;
+}
+bool Road::moveOffRoad(int sl, int sk, int offl, int offk) //offk does not matter
+{
+	return (sl + offl < 0 || sl + offl >= width ||
+		(Road::exits && sk >= length && sl == width - 1 && offl < 0));
 }
 void Road::flush() //must flush after all cars have been moved. This updates the cellular automaton
 {
@@ -221,30 +229,6 @@ void Road::fill0Buffer()
 			tdata[i][j] = 0;
 		}
 }
-/*
-void Road::clearData()
-{
-	int i, j;
-	for (i = 0; i < width; i++)
-		for (j = 0; j < lengthOf(i); j++)
-		{
-			if (data[i][j])
-				delete data[i][j];
-			data[i][j] = 0;
-		}
-}
-void Road::clearBuffer()
-{
-	int i, j;
-	for (i = 0; i < width; i++)
-		for (j = 0; j < lengthOf(i); j++)
-		{
-			if (tdata[i][j])
-				delete tdata[i][j];
-			tdata[i][j] = 0;
-		}
-}
-*/
 int Road::speedLimit(int l, int k)
 {
 	if (exits)

@@ -49,29 +49,32 @@ void Car::copy(const Car &b)
 
 int Car::distanceThisLane()
 {
-	Car *frontCar = road->frontCar(lane, (place + 1) % road->length);
+	int len = road->lengthOf(lane);
+	Car *frontCar = road->frontCar(lane, (place + 1) % len);
 	//printf(" frontcar of %ld = %ld ", (long)this, (long)frontCar);
-    return frontCar && frontCar != this ? (frontCar->place - this->place + road->length) % road->length : road->length;
+    return frontCar && frontCar != this ? (frontCar->place - this->place + len) % len : len;
 }
 int Car::distanceOtherLane(int off)
 {
 	if (off == 0)
 		return distanceThisLane();
-	if (lane + off < 0 || lane + off >= road->width)
+	if (road->moveOffRoad(lane, place, off))
 		return -1;
+	int len = road->lengthOf(lane + off);
     Car *frontCarOther = road->frontCar(lane + off, place);
-    return frontCarOther ? (frontCarOther->place - this->place + road->length) % road->length : road->length;
+    return frontCarOther ? (frontCarOther->place - this->place + len) % len : len;
 }
 int Car::distanceBack(int off)
 {
-	if (lane + off < 0 || lane + off >= road->width)
+	if (road->moveOffRoad(lane, place, off))
 		return -1;
+	int len = road->lengthOf(lane + off);
 	Car *backCarOther = road->backCar(lane + off, place);
-    return backCarOther && backCarOther != this ? (this->place - backCarOther->place + road->length) % road->length : road->length;
+    return backCarOther && backCarOther != this ? (this->place - backCarOther->place + len) % len : len;
 }
 int Car::distanceFrontSeen(int off)
 {
-	if (lane + off < 0 || lane + off >= road->width)
+	if (road->moveOffRoad(lane, place, off))
 		return -1;
 	double p;
 	if (off == 1)
@@ -80,23 +83,26 @@ int Car::distanceFrontSeen(int off)
 		p = driverpos;
 	else
 		return -1;
+	int len = road->lengthOf(lane + off);
 	if (p == 0.0)
-		return road->length;
+		return len;
 	double gap = distanceThisLane() - 1.0;
 	double d = (gap + driverdepth) / p + gap;
-	return std::min((int)(d + 1.0 - 1E-7) /*ceil(d)*/, road->length);
+	return std::min((int)(d + 1.0 - 1E-7) /*ceil(d)*/, len);
 }
 
 bool Car::switchCondition(int off, int hopeSpeed) //offs = 1 or -1
 {
-	if (lane + off < 0 || lane + off >= road->width)
+	if (road->moveOffRoad(lane, place, off))
 		return false;
 	int dtl = distanceThisLane();
 	return dtl - 1 < hopeSpeed && distanceOtherLane(off) > dtl;  //dtl-1?
 }
 bool Car::switchSafeCondition(int off)
 {
-	if (lane + off < 0 || lane + off >= road->width)
+	if (road->moveOffRoad(lane, place, off))
+		return false;
+	if (distanceOtherLane(off) <= 0)
 		return false;
 	Car *backCarOther = road->backCar(lane + off, place);
 	return backCarOther ? distanceBack(off) > backCarOther->maxspeed : true;
@@ -105,7 +111,7 @@ bool Car::switchSafeCondition(int off)
 }
 bool Car::switchBackCondition(int off, int hopeSpeed)
 {
-	if (lane + off < 0 || lane + off >= road->width)
+	if (road->moveOffRoad(lane, place, off))
 		return false;
 	int dol = distanceOtherLane(off);
 	return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
