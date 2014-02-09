@@ -6,14 +6,18 @@
 class NS : public Car
 {
 public:
-	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, int maxacc = 3, int maxdec = 10, int rnddec = 3, double pslow = 0.5, double ppass = 0.5)
+	static const int preexitdis = 444;
+	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, int maxacc = 3, int maxdec = 10, int thrdec = 6, int rnddec = 3, double pslow = 0.5, double ppass = 0.5)
 		: Car(id, road, lane, place, maxspeed, speed)
 	{
 		this->maxacc = maxacc;
 		this->maxdec = maxdec;
+		this->thrdec = thrdec;
 		this->rnddec = rnddec;
 		this->pslow = pslow;
 		this->ppass = ppass;
+		
+		this->toexit = false;
 	}
 	/*
 	Car *duplicate()
@@ -26,46 +30,70 @@ public:
 		//Pass Conditions
 		bool pass = false;
 		int spd = this->speed;
-		int posmaxspeed = std::min(maxspeed, currentSpeedLimit());
+		int posmaxspeed = maxspeed;
 		int hopeSpeed = std::min(posmaxspeed , spd + maxacc);
 		int off = (int)(!lane) - lane;
 		//printf("switch %d, safe %d\n", (int)switchCondition(off, hopeSpeed), (int)switchSafeCondition(off));
 		//printf("dtl = %d, off = %d\n", distanceThisLane(), off);
 		
-		if (freepass)
+		if (Road::exits && this->toexit && place >= road->length - preexitdis) //move to the rightmost lane to exit
 		{
-			if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
-				pass = rand() < (RAND_MAX * ppass);
+			pass = false;
+			if (lane < road->width - 1)
+			{
+				off = 1;
+				if (switchSafeCondition(off))
+					pass = true;
+			}
 		}
-		if (leftpass)
+		else if (Road::exits && lane == road->width - 1 && place < Road::enterbuffer) //entering
 		{
-			if (lane == 1)
+			pass = false;
+			off = 1;
+			if (switchSafeCondition(off))
+				pass = true;
+		}
+		else //not exiting
+		{
+			if (freepass)
 			{
 				if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
 					pass = rand() < (RAND_MAX * ppass);
 			}
-			if (lane == 0)
+			if (leftpass)
 			{
-				if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
-					pass = true;
+				if (lane == 1)
+				{
+					if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+						pass = rand() < (RAND_MAX * ppass);
+				}
+				if (lane == 0)
+				{
+					if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
+						pass = true;
+				}
 			}
-		}
-		if (rightpass)
-		{
-			if (lane == 0)
+			if (rightpass)
 			{
-				if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
-					pass = rand() < (RAND_MAX * ppass);
+				if (lane == 0)
+				{
+					if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
+						pass = rand() < (RAND_MAX * ppass);
+				}
+				if (lane == 1)
+				{
+					if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
+						pass = true;
+				}
 			}
-			if (lane == 1)
-			{
-				if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
-					pass = true;
-			}
-		}
+		}//not exiting
 		
-        //Speed up
-        spd = std::min(posmaxspeed , spd + maxacc);
+		int sl = currentSpeedLimit();
+		if (spd <= sl) //speed up
+			spd = std::min(std::min(maxspeed, sl), spd + maxacc);
+		else //follow speed limit
+        	spd = std::max(sl, spd - thrdec);
+
         //Deterministic speed down
         int dol = distanceOtherLane(off);
 		if (blindness)
@@ -81,13 +109,23 @@ public:
             spd = std::max(spd - rnddec, 0);
         }
         
+        if (speed > spd) //brake
+        {
+			brake[speed - spd]++;
+		}
+        if (speed - spd > thrdec) //sudden brake
+        {
+			suddenbrake++;
+		}
+        
         //Move
         road->carMoveOff(lane, place, pass ? off : 0, spd); //this modifies the position of the car
         speed = spd;
     }
 protected:
-	int maxacc, maxdec, rnddec;
+	int maxacc, maxdec, rnddec, thrdec;
 	double pslow, ppass;
+	bool toexit;
 };
 
 class Block : public Car //a block that does not move
