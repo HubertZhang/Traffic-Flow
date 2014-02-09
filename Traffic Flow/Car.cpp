@@ -108,3 +108,8 @@ bool Car::switchBackCondition(int off, int hopeSpeed)
 	int dol = distanceOtherLane(off);
 	return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
 }
+
+int Car::currentSpeedLimit()
+{
+	return road->speedLimit(lane, place);
+}

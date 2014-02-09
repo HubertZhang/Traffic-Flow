@@ -26,6 +26,8 @@ public:
 	bool switchSafeCondition(int off);
 	bool switchBackCondition(int off, int hopeSpeed);
 	
+	int currentSpeedLimit();
+	
 	Road *road;
     int lane;
     int place;

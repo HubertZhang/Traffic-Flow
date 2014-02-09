@@ -5,7 +5,14 @@
 #include "Car.h"
 #include "Road.h"
 
-int Road::passcnt = 0;
+int Road::switchtoL[4] = {0};
+int Road::switchtoR[4] = {0};
+int Road::switchcnt = 0;
+bool Road::exits = false;
+int Road::exitbuffer = 45, Road::enterbuffer = 81;
+int Road::offlength = 200; //length outside the freeway
+int Road::offspeedlimit = 11; //speed limit outside the freeway
+int Road::speedlimit = 22; //speed limit inside the freeway
 
 Road::Road(int w, int l)
 {
@@ -137,7 +144,7 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 		printf("Moving null pointer!\n");
 		int j = 0;
 		int i = 1 / j;
-		passcnt += i;
+		switchcnt += i;
 		return;
 	}
 	if (sl + offl < 0 || sl + offl >= width)
@@ -145,11 +152,17 @@ void Road::carMoveOff(int sl, int sk, int offl, int offk) //this modifies the in
 		printf("Moving off road!\n");
 		int j = 0;
 		int i = 1 / j;
-		passcnt += i;
+		switchcnt += i;
 		return;
 	}
 	if (offl != 0)
-		passcnt++;
+	{
+		if (offl == 1)
+			switchtoR[sl]++;
+		if (offl == -1)
+			switchtoL[sl]++;
+		switchcnt++;
+	}
 	int tl = sl + offl;
 	int tk = (sk + offk) % length;
 	if (tdata[tl][tk])
@@ -223,6 +236,10 @@ void Road::clearBuffer()
 		}
 }
 */
+int Road::speedLimit(int l, int k)
+{
+	return speedlimit;
+}
 Car **Road::operator [](unsigned s)
 {
 	return data[s];

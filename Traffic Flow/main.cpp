@@ -4,9 +4,9 @@
 #define ITERATION 10000
 #define OMIT_ITERATION 1000
 #define pWWH 0.5
-#define SPEEDMAX1 6
+#define SPEEDMAX1 22
 #define pSM1 0.5
-#define SPEEDMAX2 4
+#define SPEEDMAX2 15
 
 #include <iostream>
 #include <vector>
@@ -22,9 +22,10 @@
 struct Result
 {
 	double avgspeed[2], density[2], flux[2];
+	int switchtoL[2], switchtoR[2];
 	double paras, sumd, sumf;
-	int passcnt;
-	Result(double *as, double *d, int pc)
+	int switchcnt;
+	Result(double *as, double *d, int *stl, int *str)
 	{
 		avgspeed[0] = as[0];
 		avgspeed[1] = as[1];
@@ -36,19 +37,23 @@ struct Result
 		sumd = density[0] + density[1];
 		paras = sumf / sumd;
 		
-		passcnt = pc;
+		switchtoL[0] = stl[0];
+		switchtoL[1] = stl[1];
+		switchtoR[0] = str[0];
+		switchtoR[1] = str[1];
+		switchcnt = stl[0] + stl[1] + str[0] + str[1];
 	}
 	static void outputHead(FILE *fp)
 	{
 		for (int i = 0; i < 2; i++)
-			fprintf(fp, "avgspeed%d\tdensity%d\tflux%d\t", i, i, i);
-		fprintf(fp, "par avgspeed\tsum density\tsum flux\tpasscnt\n");
+			fprintf(fp, "avgspeed%d\tdensity%d\tflux%d\tstl%d\tstr%d\t", i, i, i, i, i);
+		fprintf(fp, "par avgspeed\tsum density\tsum flux\tswitchcnt\n");
 	}
 	void output(FILE *fp)
 	{
 		for (int i = 0; i < 2; i++)
-			fprintf(fp, "%lf\t%lf\t%lf\t", avgspeed[i], density[i], flux[i]);
-		fprintf(fp, "%lf\t%lf\t%lf\t%d\n", paras, sumd, sumf, passcnt);
+			fprintf(fp, "%lf\t%lf\t%lf\t%d\t%d\t", avgspeed[i], density[i], flux[i], switchtoL[i], switchtoR[i]);
+		fprintf(fp, "%lf\t%lf\t%lf\t%d\n", paras, sumd, sumf, switchcnt);
 	}
 };
 
@@ -83,7 +88,9 @@ Result simulate(double expdensity)
     long ttspeed[2] = {0};
     long ttcount[2] = {0};
     int cntiteration = 0;
-    Road::passcnt = 0;
+    memset(Road::switchtoL, 0, sizeof(Road::switchtoL));
+    memset(Road::switchtoR, 0, sizeof(Road::switchtoR));
+    Road::switchcnt = 0;
     for (int i = 0; i < ITERATION; i++) {
 		road.calOrder();
 		/*
@@ -141,14 +148,14 @@ Result simulate(double expdensity)
     std::cout << "Avg Speed : " << totavgspeed << "\n";
     std::cout << "Density   : " << density << "\n";
     std::cout << "Flux      : " << flux << "\n";
-    std::cout << "Pass Count: " << Road::passcnt << "\n";
+    std::cout << "Pass Count: " << Road::switchcnt << "\n";
     //return Result(totavgspeed, density, flux, Road::passcnt);
     double as[2], d[2];
     as[0] = ttspeed[0] / (double)ttcount[0];
     as[1] = ttspeed[1] / (double)ttcount[1];
     d[0] = ttcount[0] / (double)cntiteration / (double)road.length;
     d[1] = ttcount[1] / (double)cntiteration / (double)road.length;
-    return Result(as, d, Road::passcnt);
+    return Result(as, d, Road::switchtoL, Road::switchtoR);
 }
 
 char FILENAME[2048];

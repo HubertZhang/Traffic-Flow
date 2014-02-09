@@ -6,7 +6,13 @@
 class Road
 {
 public:
-	static int passcnt;
+	static int switchtoL[4], switchtoR[4];
+	static int switchcnt;
+	static bool exits; //whether the freeway has an entrance and an exit
+	static int exitbuffer, enterbuffer; //buffer length
+	static int offlength; //length outside the freeway
+	static int offspeedlimit; //speed limit outside the freeway
+	static int speedlimit; //speed limit inside the freeway
 	
 	Road(int w, int l);
 	~Road();
@@ -21,6 +27,7 @@ public:
 	void fill0Buffer();
 	//void clearData();
 	//void clearBuffer();
+	int speedLimit(int l, int k);
 	Car **operator [](unsigned s);
 	bool findRepetition();
 	void print(Car ***d = 0, FILE *out = stdout);
