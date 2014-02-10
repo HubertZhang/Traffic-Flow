@@ -125,13 +125,13 @@ void Road::calOrder()
 }
 Car *Road::frontCar(int l, int k)
 {
-	if (frontpos[l][k] == -1)
+	if (l < 0 || l >= width || frontpos[l][k] == -1)
 		return 0;
 	return data[l][frontpos[l][k]];
 }
 Car *Road::backCar(int l, int k)
 {
-	if (backpos[l][k] == -1)
+	if (l < 0 || l >= width || backpos[l][k] == -1)
 		return 0;
 	return data[l][backpos[l][k]];
 }

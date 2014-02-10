@@ -15,6 +15,7 @@ int Car::weightedsuddenbrake = 0;
 int Car::missexit = 0;
 
 bool Car::perceiveddis = false;
+bool Car::intelligent = false;
 
 //static int totalSpeed;
 Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){
@@ -120,8 +121,20 @@ bool Car::switchSafeCondition(int off)
 		return false;
 	if (distanceOtherLane(off) <= 0)
 		return false;
+	
 	Car *backCarOther = road->backCar(lane + off, place);
-	return backCarOther ? distancePerceived(distanceBack(off)) > backCarOther->maxspeed : true;
+	Car *backCarThis = road->backCar(lane, place);
+	Car *backCarYetAnother = road->backCar(lane + off + off, place);
+	return (backCarOther ? distancePerceived(distanceBack(off)) > backCarOther->maxspeed : true) &&
+		(backCarThis ? distancePerceived(distanceBack(0)) > backCarThis->maxspeed : true) &&
+		(backCarYetAnother ? distancePerceived(distanceBack(off + off)) > backCarYetAnother->maxspeed : true);
+	/*
+	int disbackthis = distanceBack(0);
+	int disbackother = distanceBack(off)
+	int disbackanother = distanceBack(off + off);
+	return distancePerceived(disbackthis) > maxspeedBack(0) &&
+		distancePerceived(disbackother) > maxspeedBack(off) &&
+		distancePerceived(disbackanother) > maxspeedBack(off + off);*/
 	//what should the distance be compared with?
 	//backCarOther->maxspeed is not reasonable
 }

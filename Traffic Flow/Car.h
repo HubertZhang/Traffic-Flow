@@ -16,6 +16,7 @@ public:
 	static int missexit;
 	
 	static bool perceiveddis;
+	static bool intelligent;
 	
     //static int totalSpeed;
     Car(int id, Road *road, int lane, int place, int maxspeed, int speed = 0);

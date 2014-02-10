@@ -119,7 +119,7 @@ public:
         	spd = std::max(std::min(distancePerceived(distanceThisLane()) - 1, spd), 0);
         
         //Undeterministic speed down
-        if(rand() < RAND_MAX * pslow)
+        if(!intelligent && rand() < RAND_MAX * pslow)
         {
             spd = std::max(spd - rnddec, 0);
         }
