@@ -29,6 +29,7 @@ public:
 	int distanceThisLane();
 	int distanceOtherLane(int off);
 	int distanceBack(int off);
+	bool mayCatch(Car *c);
 	int distanceFrontSeen(int off);
 	
 	int distancePerceived(int dist);

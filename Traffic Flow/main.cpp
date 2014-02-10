@@ -8,7 +8,7 @@
 #define SPEEDMAX1 22
 #define pSM1 0.5
 #define SPEEDMAX2 15
-#define pEXIT 0.2
+//#define pEXIT 0.2
 
 #include <iostream>
 #include <vector>
@@ -94,6 +94,7 @@ struct Result
 };
 
 //float avgSpeed[ITERATION]={0};
+double pEXIT = 0.2;
 Result simulate(int width, double expdensity)
 {
 	Road road(width, LENGTH);
@@ -225,17 +226,25 @@ Result simulate(int width, double expdensity)
 
 char FILENAME[2048];
 
-void batch(bool re, bool cl, bool cr, bool cf, bool cb, bool cp)
+void batch(double pe, bool cl, bool cr, bool cf, bool cb, bool cp, bool ci)
 {
 	int i;
 	FILE *fp;
     
-    Road::exits = re;
+    if (ci == true)
+    {
+		cb = false;
+    	cp = false;
+	}
+    
+    pEXIT = pe;
+    Road::exits = (pe != 0.0);
     Car::leftpass = cl;
     Car::rightpass = cr;
     Car::freepass = cf;
     Car::blindness = cb;
     Car::perceiveddis = cp;
+    Car::intelligent = ci;
     
     char *pass = (char *)(Car::leftpass ? "leftpass" : Car::rightpass ? "rightpass" : Car::freepass ? "freepass" : "nopass");
     char *blnd = (char *)(Car::blindness ? "blindness" : "no blindness");
@@ -271,9 +280,9 @@ int main(int argc, const char * argv[])
 	int i;
 	for (i = 0; i < 1000; i++)
 	{
-		batch(true, true, false, false, true, true);
-		batch(true, false, true, false, true, true);
-		batch(true, false, false, true, true, true);
+		batch(0.2, true, false, false, true, true, false);
+		batch(0.2, false, true, false, true, true, false);
+		batch(0.2, false, false, true, true, true, false);
 	}
 	return 0;
 }

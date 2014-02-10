@@ -7,7 +7,9 @@ class NS : public Car
 {
 public:
 	static const int preexitdis = 444;
-	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, int maxacc = 3, int maxdec = 10, int thrdec = 6, int rnddec = 3, double pslow = 0.5, double ppass = 0.5)
+	//double maxacc, thrdec, rnddec, pslow, ppass;
+	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, 
+		int maxacc = 3, int maxdec = 10, int thrdec = 6, int rnddec = 3, double pslow = 0.5, double ppass = 0.5)
 		: Car(id, road, lane, place, maxspeed, speed)
 	{
 		this->maxacc = maxacc;
