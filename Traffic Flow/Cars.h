@@ -18,6 +18,8 @@ public:
 		this->ppass = ppass;
 		
 		this->toexit = false;
+		
+		this->phopetoexit = false;
 	}
 	/*
 	Car *duplicate()
@@ -40,8 +42,10 @@ public:
 		//printf("switch %d, safe %d\n", (int)switchCondition(off, hopeSpeed), (int)switchSafeCondition(off));
 		//printf("dtl = %d, off = %d\n", distanceThisLane(), off);
 		
+		bool hopetoexit = false;
 		if (Road::exits && this->toexit && place >= road->length - preexitdis) //move to the rightmost lane to exit
 		{
+			hopetoexit = true;
 			pass = false;
 			if (lane < road->width - 1)
 			{
@@ -92,6 +96,13 @@ public:
 			}
 		}//not exiting
 		
+		if (Road::exits && this->toexit && phopetoexit && !hopetoexit)
+		{
+			if (lane != road->width - 1)
+				missexit++;
+		}
+		phopetoexit = hopetoexit;
+		
 		int sl = currentSpeedLimit();
 		if (spd <= sl) //speed up
 			spd = std::min(std::min(maxspeed, sl), spd + maxacc);
@@ -99,13 +110,13 @@ public:
         	spd = std::max(sl, spd - thrdec);
 
         //Deterministic speed down
-        int dol = distanceOtherLane(off);
+        int dol = distancePerceived(distanceOtherLane(off));
 		if (blindness)
-        	dol = std::min(dol, distanceFrontSeen(off) + 1);
+        	dol = std::min(dol, distancePerceived(distanceFrontSeen(off)) + 1);
         if (pass)
-        	spd = std::max(std::min(std::min(dol, distanceThisLane()) - 1, spd), 0); //-1 or not
+        	spd = std::max(std::min(std::min(dol, distancePerceived(distanceThisLane())) - 1, spd), 0); //-1 or not
 		else
-        	spd = std::max(std::min(distanceThisLane() - 1, spd), 0);
+        	spd = std::max(std::min(distancePerceived(distanceThisLane()) - 1, spd), 0);
         
         //Undeterministic speed down
         if(rand() < RAND_MAX * pslow)
@@ -120,6 +131,7 @@ public:
         if (speed - spd > thrdec) //sudden brake
         {
 			suddenbrake++;
+			weightedsuddenbrake += speed - spd - thrdec;
 		}
         
         //Move
@@ -130,6 +142,8 @@ protected:
 	int maxacc, maxdec, rnddec, thrdec;
 	double pslow, ppass;
 	bool toexit;
+	
+	bool phopetoexit;
 };
 
 class Block : public Car //a block that does not move

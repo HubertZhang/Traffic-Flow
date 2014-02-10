@@ -11,6 +11,10 @@ bool Car::blindness = false;
 double Car::driverpos = 0.25;
 int Car::brake[MAXBRAKE] = {0};
 int Car::suddenbrake = 0;
+int Car::weightedsuddenbrake = 0;
+int Car::missexit = 0;
+
+bool Car::perceiveddis = false;
 
 //static int totalSpeed;
 Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){
@@ -91,12 +95,24 @@ int Car::distanceFrontSeen(int off)
 	return std::min((int)(d + 1.0 - 1E-7) /*ceil(d)*/, len);
 }
 
+int Car::distancePerceived(int dist)
+{
+	if (!perceiveddis)
+		return dist;
+	double c;
+	if (speed <= 7)
+		c = 1.0 - 3.0 * speed / 74.0;
+	else
+		c = 0.8 - speed / 74.0;
+	return (int)(dist * c + 0.5); //rounding
+}
+
 bool Car::switchCondition(int off, int hopeSpeed) //offs = 1 or -1
 {
 	if (road->moveOffRoad(lane, place, off))
 		return false;
-	int dtl = distanceThisLane();
-	return dtl - 1 < hopeSpeed && distanceOtherLane(off) > dtl;  //dtl-1?
+	int dtl = distancePerceived(distanceThisLane());
+	return dtl - 1 < hopeSpeed && distancePerceived(distanceOtherLane(off)) > dtl;  //dtl-1?
 }
 bool Car::switchSafeCondition(int off)
 {
@@ -105,16 +121,16 @@ bool Car::switchSafeCondition(int off)
 	if (distanceOtherLane(off) <= 0)
 		return false;
 	Car *backCarOther = road->backCar(lane + off, place);
-	return backCarOther ? distanceBack(off) > backCarOther->maxspeed : true;
-	//what should the distance be conpared with?
+	return backCarOther ? distancePerceived(distanceBack(off)) > backCarOther->maxspeed : true;
+	//what should the distance be compared with?
 	//backCarOther->maxspeed is not reasonable
 }
 bool Car::switchBackCondition(int off, int hopeSpeed)
 {
 	if (road->moveOffRoad(lane, place, off))
 		return false;
-	int dol = distanceOtherLane(off);
-	return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
+	int dol = distancePerceived(distanceOtherLane(off));
+	return hopeSpeed <= dol - 1 || distancePerceived(distanceThisLane()) <= dol;
 }
 
 int Car::currentSpeedLimit()

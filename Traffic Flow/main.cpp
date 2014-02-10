@@ -1,14 +1,14 @@
 #define WIDTH 2
 #define LENGTH 3000
 #define DENSITY_MIN 0.01
-#define DENSITY_MAX 0.4
+#define DENSITY_MAX 0.8
 #define ITERATION 10000
 #define OMIT_ITERATION 1000
 //#define pWWH 0.5
 #define SPEEDMAX1 22
 #define pSM1 0.5
 #define SPEEDMAX2 15
-#define pEXIT 0.1
+#define pEXIT 0.2
 
 #include <iostream>
 #include <vector>
@@ -30,8 +30,9 @@ struct Result
 	double paras, sumd, sumf;
 	int switchcnt;
 	int brake[MAXBRAKE];
-	int suddenbrake;
-	Result(int wid, double *as, double *d, double de, int *stl, int *str, int *brk, int sbrk)
+	int suddenbrake, weightedsuddenbrake;
+	int missexit;
+	Result(int wid, double *as, double *d, double de, int *stl, int *str, int *brk, int sbrk, int wsbrk, int me)
 	{
 		width = wid;
 		memcpy(avgspeed, as, sizeof(avgspeed[0]) * width);
@@ -71,12 +72,14 @@ struct Result
 		//switchcnt = stl[0] + stl[1] + str[0] + str[1];
 		memcpy(brake, brk, sizeof(brake[0]) * MAXBRAKE);
 		suddenbrake = sbrk;
+		weightedsuddenbrake = wsbrk;
+		missexit = me;
 	}
 	static void outputHead(int width, FILE *fp)
 	{
 		for (int i = 0; i < width; i++)
 			fprintf(fp, "avgspeed%d\tdensity%d\tflux%d\tstl%d\tstr%d\t", i, i, i, i, i);
-		fprintf(fp, "par avgspeed\tsum density\tpercent exit\tsum flux\tswitchcnt\tsbrkcnt\n");
+		fprintf(fp, "par avgspeed\tsum density\tpercent exit\tsum flux\tswitchcnt\tsbrkcnt\twsbrkcnt\tmissexit\n");
 	}
 	void output(FILE *fp)
 	{
@@ -86,7 +89,7 @@ struct Result
 	    std::cout << "Pass Count: " << switchcnt << "\n";
 		for (int i = 0; i < width; i++)
 			fprintf(fp, "%lf\t%lf\t%lf\t%d\t%d\t", avgspeed[i], density[i], flux[i], switchtoL[i], switchtoR[i]);
-		fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%d\t%d\n", paras, sumd, sumdexit, sumf, switchcnt, suddenbrake);
+		fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%d\t%d\t%d\t%d\n", paras, sumd, sumdexit, sumf, switchcnt, suddenbrake, weightedsuddenbrake, missexit);
 	}
 };
 
@@ -110,7 +113,7 @@ Result simulate(int width, double expdensity)
     for (int i = 0; i < road.length; i++) {
 		for (int l = 0; l < width; l++) {
 		
-	        if (rand() < RAND_MAX * expdensity) {
+	        if (rand() < RAND_MAX * expdensity / width) {
 				NS *c;
 				int maxspeed = (rand() < RAND_MAX * pSM1) ? SPEEDMAX1 : SPEEDMAX2;
 				c = new NS(cars.size(), &road, l, i, maxspeed);
@@ -140,6 +143,8 @@ Result simulate(int width, double expdensity)
     Road::switchcnt = 0;
     memset(Car::brake, 0, sizeof(Car::brake));
     Car::suddenbrake = 0;
+    Car::weightedsuddenbrake = 0;
+    Car::missexit = 0;
     
     for (int i = 0; i < ITERATION; i++) {
 		road.calOrder();
@@ -188,7 +193,7 @@ Result simulate(int width, double expdensity)
         while (--n);
         */
         
-        if (i % (ITERATION / 100) == 0)
+        if (i % (ITERATION / 10) == 0)
         	printf("iteration %d%%\n", i * 100 / ITERATION);
         
     }
@@ -215,25 +220,28 @@ Result simulate(int width, double expdensity)
 		as[i] = ttspeed[i] / (double)ttcount[i];
 	    d[i] = ttcount[i] / (double)cntiteration / rl;
 	}
-    return Result(wid, as, d, pe, Road::switchtoL, Road::switchtoR, Car::brake, Car::suddenbrake);
+    return Result(wid, as, d, pe, Road::switchtoL, Road::switchtoR, Car::brake, Car::suddenbrake, Car::weightedsuddenbrake, Car::missexit);
 }
 
 char FILENAME[2048];
 
-int main(int argc, const char * argv[])
+void batch(bool re, bool cl, bool cr, bool cf, bool cb, bool cp)
 {
 	int i;
 	FILE *fp;
     
-    Road::exits = true;
-    Car::leftpass = false;
-    Car::rightpass = true;
-    Car::freepass = false;
-    Car::blindness = true;
+    Road::exits = re;
+    Car::leftpass = cl;
+    Car::rightpass = cr;
+    Car::freepass = cf;
+    Car::blindness = cb;
+    Car::perceiveddis = cp;
+    
     char *pass = (char *)(Car::leftpass ? "leftpass" : Car::rightpass ? "rightpass" : Car::freepass ? "freepass" : "nopass");
     char *blnd = (char *)(Car::blindness ? "blindness" : "no blindness");
-	sprintf(FILENAME, "result NS, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %.2lfpEXIT, %s, %s, driverpos%.2lf.txt",
-		DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, Road::exits ? pEXIT : 0.0, pass, blnd, Car::driverpos);
+    char *perc = (char *)(Car::perceiveddis ? "perceiveddis" : "realdis");
+	sprintf(FILENAME, "result NS, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %.2lfpEXIT, %s, %s, %s, driverpos%.2lf.txt",
+		DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, Road::exits ? pEXIT : 0.0, pass, blnd, perc, Car::driverpos);
 	printf("outputfile: %s\n", FILENAME);
 	
 	fp = fopen(FILENAME, "r");
@@ -248,12 +256,24 @@ int main(int argc, const char * argv[])
 		fclose(fp);
     srand((unsigned)time(0));
     
-	for (i = 0; i < 1000; i++)
+	for (i = 0; i < 3; i++)
 	{
 		printf("Simulation #%d\n", i);
 		fp = fopen(FILENAME, "a");
 		simulate(WIDTH, DENSITY_MIN + (DENSITY_MAX - DENSITY_MIN) * (rand() / (double)RAND_MAX)).output(fp);
 		fclose(fp);
+	}
+	return;
+}
+
+int main(int argc, const char * argv[])
+{
+	int i;
+	for (i = 0; i < 1000; i++)
+	{
+		batch(true, true, false, false, true, true);
+		batch(true, false, true, false, true, true);
+		batch(true, false, false, true, true, true);
 	}
 	return 0;
 }
