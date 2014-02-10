@@ -10,5 +10,13 @@
             </PersistentString>
          </PersistentStrings>
       </ContextState>
+      <ContextState
+         contextName = "Road::carMoveOff(int, int, int, int):Road.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "tdata[tl][tk]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
    </ContextStates>
 </VariablesViewState>

@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B4D1DCCA18A4E4CA00431C71 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B4D1DCC918A4E4CA00431C71 /* main.cpp */; };
+		B46382FA18A66B830021F593 /* Car.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B46382F218A66B830021F593 /* Car.cpp */; };
+		B46382FB18A66B830021F593 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B46382F518A66B830021F593 /* main.cpp */; };
+		B46382FE18A66B830021F593 /* Road.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B46382F818A66B830021F593 /* Road.cpp */; };
 		B4D1DCCC18A4E4CA00431C71 /* Traffic_Flow.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = B4D1DCCB18A4E4CA00431C71 /* Traffic_Flow.1 */; };
 /* End PBXBuildFile section */
 
@@ -25,8 +27,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B46382F218A66B830021F593 /* Car.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Car.cpp; sourceTree = "<group>"; };
+		B46382F318A66B830021F593 /* Car.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Car.h; sourceTree = "<group>"; };
+		B46382F418A66B830021F593 /* Cars.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cars.h; sourceTree = "<group>"; };
+		B46382F518A66B830021F593 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		B46382F818A66B830021F593 /* Road.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Road.cpp; sourceTree = "<group>"; };
+		B46382F918A66B830021F593 /* Road.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Road.h; sourceTree = "<group>"; };
 		B4D1DCC618A4E4CA00431C71 /* Traffic Flow */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Traffic Flow"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B4D1DCC918A4E4CA00431C71 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B4D1DCCB18A4E4CA00431C71 /* Traffic_Flow.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Traffic_Flow.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -60,7 +67,12 @@
 		B4D1DCC818A4E4CA00431C71 /* Traffic Flow */ = {
 			isa = PBXGroup;
 			children = (
-				B4D1DCC918A4E4CA00431C71 /* main.cpp */,
+				B46382F218A66B830021F593 /* Car.cpp */,
+				B46382F318A66B830021F593 /* Car.h */,
+				B46382F418A66B830021F593 /* Cars.h */,
+				B46382F518A66B830021F593 /* main.cpp */,
+				B46382F818A66B830021F593 /* Road.cpp */,
+				B46382F918A66B830021F593 /* Road.h */,
 				B4D1DCCB18A4E4CA00431C71 /* Traffic_Flow.1 */,
 			);
 			path = "Traffic Flow";
@@ -117,7 +129,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B4D1DCCA18A4E4CA00431C71 /* main.cpp in Sources */,
+				B46382FA18A66B830021F593 /* Car.cpp in Sources */,
+				B46382FE18A66B830021F593 /* Road.cpp in Sources */,
+				B46382FB18A66B830021F593 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -225,6 +239,7 @@
 				B4D1DCD118A4E4CA00431C71 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

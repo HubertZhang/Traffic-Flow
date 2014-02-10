@@ -13,6 +13,7 @@ int Car::brake[MAXBRAKE] = {0};
 int Car::suddenbrake = 0;
 int Car::weightedsuddenbrake = 0;
 int Car::missexit = 0;
+bool Car::moge = false;
 
 bool Car::perceiveddis = false;
 bool Car::intelligent = false;
@@ -27,11 +28,15 @@ Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){
     this->speed = speed;
     
     this->driverdepth = 0.4;
-    
+
 	this->maxacc = 0;
 	this->maxdec = 0;
 	this->thrdec = 0;
 	this->rnddec = 0;
+
+    this->oldFrontCarID=-1;
+    this->canReturn=false;
+
 }
 Car::Car(const Car &b)
 {
@@ -169,9 +174,17 @@ bool Car::switchBackCondition(int off, int hopeSpeed)
 {
 	if (road->moveOffRoad(lane, place, off))
 		return false;
-	int dol = distancePerceived(distanceOtherLane(off));
-	return (hopeSpeed <= dol - 1 || distancePerceived(distanceThisLane()) <= dol) &&
-		dol - 1 >= speed - thrdec;//no hard braking
+	if (!moge)
+	{
+		int dol = distancePerceived(distanceOtherLane(off));
+		return (hopeSpeed <= dol - 1 || distancePerceived(distanceThisLane()) <= dol) &&
+			dol - 1 >= speed - thrdec;//no hard braking
+	}
+	else
+	{
+		int dol = distanceOtherLane(off);
+	    return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
+	}
 }
 
 int Car::currentSpeedLimit()

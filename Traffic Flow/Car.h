@@ -18,6 +18,8 @@ public:
 	static bool perceiveddis;
 	static bool intelligent;
 	
+	static bool moge;
+	
     //static int totalSpeed;
     Car(int id, Road *road, int lane, int place, int maxspeed, int speed = 0);
     Car(const Car &b);
@@ -36,7 +38,7 @@ public:
    
 	bool switchCondition(int off, int hopeSpeed); //offs = 1 or -1
 	bool switchSafeCondition(int off);
-	bool switchBackCondition(int off, int hopeSpeed);
+	virtual bool switchBackCondition(int off, int hopeSpeed);
 	
 	int currentSpeedLimit();
 	
@@ -46,6 +48,12 @@ public:
     int speed;
     int maxspeed;
     int id;
+    
+    int distanceToFrontCar;
+    int distanceIncreaseTime;//time that distance to old front car has increased
+    int oldFrontCarID;
+    bool canReturn;//have passed a car
+    
     
     double driverdepth;
     

@@ -6,6 +6,8 @@
 class NS : public Car
 {
 public:
+    int timeOnLane[2];
+    
 	static const int preexitdis = 444;
 	//double maxacc, thrdec, rnddec, pslow, ppass;
 	NS(int id, Road *road, int lane, int place, int maxspeed, int speed = 0, 
@@ -22,6 +24,9 @@ public:
 		this->toexit = false;
 		
 		this->phopetoexit = false;
+		
+        timeOnLane[0]=0;
+        timeOnLane[1]=0;
 	}
 	/*
 	Car *duplicate()
@@ -74,11 +79,15 @@ public:
 			{
 				if (lane == 1)
 				{
+                    timeOnLane[0]=0;
+                    timeOnLane[1]++;
 					if (switchCondition(off, hopeSpeed) && switchSafeCondition(off))
 						pass = rand() < (RAND_MAX * ppass);
 				}
 				if (lane == 0)
 				{
+                    timeOnLane[1]=0;
+                    timeOnLane[0]++;
 					if (switchBackCondition(off, hopeSpeed) && switchSafeCondition(off))
 						pass = true;
 				}
@@ -140,6 +149,40 @@ public:
         road->carMoveOff(lane, place, pass ? off : 0, spd); //this modifies the position of the car
         speed = spd;
     }
+    bool switchBackCondition(int off, int hopeSpeed)
+    {
+        if (lane + off < 0 || lane + off >= road->width)
+            return false;
+        int dol = distanceOtherLane(off);
+        if (oldFrontCarID==-1) {
+            if (timeOnLane[lane]>10) {
+                return dol - 1>0;
+            }
+            return hopeSpeed <= dol - 1 || distanceThisLane() <= dol;
+        }
+        int newdistance =(road->cars[oldFrontCarID]->place-this->place+road->length)%road->length;
+        if (canReturn) {
+            return dol>std::max(hopeSpeed-thrdec+1, 0);//If possible, return to original lane
+        }
+        else if(timeOnLane[lane]>10) canReturn=true;
+        else if (newdistance<=0) {
+            canReturn=true;
+            return dol>std::max(hopeSpeed-thrdec+1, 0);
+        }
+        else if (newdistance>=distanceToFrontCar)
+        {
+            distanceIncreaseTime++;
+            if (distanceIncreaseTime==3) {
+                canReturn=true;
+                return dol>std::max(hopeSpeed-thrdec+1, 0);
+            }
+        }
+        
+        distanceToFrontCar=newdistance;
+        return false;
+        //return hopeSpeed <= dol - 1;// || distanceThisLane() <= dol;
+    }
+
 protected:
 	double pslow, ppass;
 	bool toexit;

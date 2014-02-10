@@ -226,7 +226,7 @@ Result simulate(int width, double expdensity)
 
 char FILENAME[2048];
 
-void batch(double pe, bool cl, bool cr, bool cf, bool cb, bool cp, bool ci)
+void batch(double pe, bool cl, bool cr, bool cf, bool cb, bool cp, bool ci, bool mg)
 {
 	int i;
 	FILE *fp;
@@ -245,13 +245,15 @@ void batch(double pe, bool cl, bool cr, bool cf, bool cb, bool cp, bool ci)
     Car::blindness = cb;
     Car::perceiveddis = cp;
     Car::intelligent = ci;
+    Car::moge = mg;
     
     char *pass = (char *)(Car::leftpass ? "leftpass" : Car::rightpass ? "rightpass" : Car::freepass ? "freepass" : "nopass");
     char *blnd = (char *)(Car::blindness ? "blindness" : "no blindness");
     char *perc = (char *)(Car::perceiveddis ? "perceiveddis" : "realdis");
     char *intl = (char *)(Car::intelligent ? "intelligent" : "stupid");
-	sprintf(FILENAME, "result NS, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %.2lfpEXIT, %s, %s, %s, %s, driverpos%.2lf.txt",
-		DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, Road::exits ? pEXIT : 0.0, pass, blnd, perc, intl, Car::driverpos);
+    char *moge = (char *)(Car::moge ? "moge" : "nomoge");
+	sprintf(FILENAME, "result NS, %.2lf-%.2lfdensity, %.2lfx%d+%.2lfx%dspeed, %.2lfpEXIT, %s, %s, %s, %s, %s, driverpos%.2lf.txt",
+		DENSITY_MIN, DENSITY_MAX, pSM1, SPEEDMAX1, 1.0 - pSM1, SPEEDMAX2, Road::exits ? pEXIT : 0.0, pass, blnd, perc, intl, moge, Car::driverpos);
 	printf("outputfile: %s\n", FILENAME);
 	
 	fp = fopen(FILENAME, "r");
@@ -286,9 +288,15 @@ int main(int argc, const char * argv[])
 		batch(0.2, false, true, false, true, true, false);
 		batch(0.2, false, false, true, true, true, false);
 		*/
-		batch(0.2, true, false, false, false, false, true);
-		batch(0.2, false, true, false, false, false, true);
-		batch(0.2, false, false, true, false, false, true);
+		/*
+		batch(0.2, true, false, false, false, false, true, false);
+		batch(0.2, false, true, false, false, false, true, false);
+		batch(0.2, false, false, true, false, false, true, false);
+		*/
+		//with moge
+		batch(0.2, true, false, false, false, false, true, true);
+		batch(0.2, false, true, false, false, false, true, true);
+		batch(0.2, false, false, true, false, false, true, true);
 	}
 	return 0;
 }
