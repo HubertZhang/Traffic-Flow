@@ -140,8 +140,10 @@ bool Car::mayCatch(Car *c)
 		int dist = c && c != this ? (this->place - c->place + len) % len : len;
 		return dist <= c->speed + c->maxacc;//???
 	}
-	
-	return distancePerceived(c && c != this ? (this->place - c->place + len) % len : len) <= c->maxspeed;
+	if (c->speed<=this->speed) {
+        return distancePerceived(c && c != this ? (this->place - c->place + len) % len : len)<=this->speed + c->maxacc;
+    }
+    else return distancePerceived(c && c != this ? (this->place - c->place + len) % len : len) <= c->maxspeed;
 }
 	
 bool Car::switchSafeCondition(int off)
@@ -154,7 +156,7 @@ bool Car::switchSafeCondition(int off)
 	Car *backCarOther = road->backCar(lane + off, place);
 	Car *backCarThis = road->backCar(lane, place);
 	Car *backCarYetAnother = road->backCar(lane + off + off, place);
-	return !mayCatch(backCarOther) && !mayCatch(backCarThis) && !mayCatch(backCarYetAnother);
+	return !mayCatch(backCarOther) /*&& !mayCatch(backCarThis)*/ && !mayCatch(backCarYetAnother);
 	/*
 	return (backCarOther ? distancePerceived(distanceBack(off)) > backCarOther->maxspeed : true) &&
 		(backCarThis ? distancePerceived(distanceBack(0)) > backCarThis->maxspeed : true) &&
@@ -177,8 +179,7 @@ bool Car::switchBackCondition(int off, int hopeSpeed)
 	if (!moge)
 	{
 		int dol = distancePerceived(distanceOtherLane(off));
-		return (hopeSpeed <= dol - 1 || distancePerceived(distanceThisLane()) <= dol) &&
-			dol - 1 >= speed - thrdec;//no hard braking
+		return dol - 1 >= speed - thrdec;//no hard braking
 	}
 	else
 	{

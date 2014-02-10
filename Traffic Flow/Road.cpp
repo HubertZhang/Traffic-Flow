@@ -265,7 +265,7 @@ void Road::print(Car ***d, FILE *out)
 	for (l = 0; l < width; l++)
 	{
 		for (k = 0; k < lengthOf(l); k++)
-			fputc(d[l][k] ? ((long)d[l][k] % 23) + 'A' : '.', out);
+			fputc(d[l][k] ? ((d[l][k]->maxspeed==15)? 'A':'B') : '.', out);
 		fprintf(out, "\n");
 	}
 	fprintf(out, "\n");

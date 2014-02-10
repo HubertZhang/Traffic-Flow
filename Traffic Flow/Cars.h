@@ -119,7 +119,11 @@ public:
 			spd = std::min(std::min(maxspeed, sl), spd + maxacc);
 		else //follow speed limit
         	spd = std::max(sl, spd - thrdec);
-
+        if (leftpass&&timeOnLane[0]>20) {
+            if (spd==maxspeed) {
+                spd+=maxacc;
+            }
+        }
         //Deterministic speed down
         int dol = distancePerceived(distanceOtherLane(off));
 		if (blindness)

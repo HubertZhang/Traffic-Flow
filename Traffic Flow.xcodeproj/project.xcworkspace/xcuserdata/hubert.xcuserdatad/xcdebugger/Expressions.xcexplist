@@ -3,18 +3,29 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "main:main.cpp">
-         <PersistentStrings>
-            <PersistentString
-               value = "speed">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "Road::carMoveOff(int, int, int, int):Road.cpp">
          <PersistentStrings>
             <PersistentString
                value = "tdata[tl][tk]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Car::distanceOtherLane(int):Car.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "frontCarOther==this">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "simulate(int, double):main.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "main:main.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "speed">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
