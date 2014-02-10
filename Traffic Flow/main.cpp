@@ -6,7 +6,7 @@
 #define OMIT_ITERATION 1000
 //#define pWWH 0.5
 #define SPEEDMAX1 22
-#define pSM1 0.5
+#define pSM1 0.8
 #define SPEEDMAX2 12
 #define pEXIT 0.1
 

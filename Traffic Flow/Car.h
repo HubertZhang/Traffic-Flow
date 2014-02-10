@@ -29,7 +29,7 @@ public:
    
 	bool switchCondition(int off, int hopeSpeed); //offs = 1 or -1
 	bool switchSafeCondition(int off);
-	bool switchBackCondition(int off, int hopeSpeed);
+	virtual bool switchBackCondition(int off, int hopeSpeed);
 	
 	int currentSpeedLimit();
 	
