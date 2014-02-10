@@ -141,7 +141,6 @@ public:
         speed = spd;
     }
 protected:
-	int maxacc, maxdec, rnddec, thrdec;
 	double pslow, ppass;
 	bool toexit;
 	

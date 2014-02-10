@@ -48,6 +48,8 @@ public:
     int id;
     
     double driverdepth;
+    
+	int maxacc, maxdec, rnddec, thrdec;
 };
 
 #endif

@@ -27,6 +27,11 @@ Car::Car(int id, Road *road, int lane, int place, int maxspeed, int speed){
     this->speed = speed;
     
     this->driverdepth = 0.4;
+    
+	this->maxacc = 0;
+	this->maxdec = 0;
+	this->thrdec = 0;
+	this->rnddec = 0;
 }
 Car::Car(const Car &b)
 {
@@ -50,6 +55,10 @@ void Car::copy(const Car &b)
 	id = b.id;
 	
 	driverdepth = b.driverdepth;
+	this->maxacc = b.maxacc;
+	this->maxdec = b.maxdec;
+	this->thrdec = b.thrdec;
+	this->rnddec = b.rnddec;
 }
 
 int Car::distanceThisLane()
@@ -120,11 +129,13 @@ bool Car::mayCatch(Car *c)
 	if (!c)
 		return false;
 	int len = road->lengthOf(c->lane);
+	
 	if (intelligent)
 	{
 		int dist = c && c != this ? (this->place - c->place + len) % len : len;
-		return dist <= c->speed + c->maxacc;
+		return dist <= c->speed + c->maxacc;//???
 	}
+	
 	return distancePerceived(c && c != this ? (this->place - c->place + len) % len : len) <= c->maxspeed;
 }
 	
